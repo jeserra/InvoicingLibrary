@@ -197,3 +197,38 @@ Logging was added only where it adds real diagnostic value, not sprinkled everyw
 
 README gained a short "Logging" section showing how to wire NLog (or any other
 `Microsoft.Extensions.Logging`-compatible provider) from the consuming application.
+
+## Phase B — CFDI 3.3 → CFDI 4.0
+
+Goal: produce schema-valid, correctly-sealed CFDI 4.0 documents. CFDI 3.3 stays
+functional in parallel until the new 4.0 path is proven end-to-end — `CFDIv32`/
+`Schemas32` in particular can't be deleted yet, because the *current* CFDI 3.3 creation
+path still depends on the complement types living in `Schemas32/valesdedespensa.cs` and
+`consumodecombustibles.cs` (they were generated into the `cfdi33` namespace but filed
+under a differently-named folder; deleting that folder before the 4.0 translate layer
+is repointed at the new complement classes would break the still-working 3.3 path).
+
+### Schema classes generated (commit follows)
+
+Fetched SAT's current official schemas and generated `Schemas40/cfdv40.cs` (core
+`Comprobante` graph, Pagos 2.0 complement) and `Schemas40/Complementos.cs`
+(ValesDeDespensa, ConsumoDeCombustibles — unchanged, version-independent complements,
+same classes CFDI 3.3 already reuses) via `xsd.exe`. Confirmed present and correctly
+typed: the three new CFDI 4.0 mandatory fields (`Comprobante.Exportacion`,
+`Receptor.RegimenFiscalReceptor`, `Receptor.DomicilioFiscalReceptor`).
+
+The one real design decision in this step: SAT's shared catalog schema (`catCFDI.xsd`)
+is ~6MB / 162k lines because it inlines every value of every catalog — including
+`c_ClaveProdServ` (52,747 entries) and `c_CodigoPostal` (95,777 entries). Generating
+those as C# enums, the way the CFDI 3.3 schema classes do, would produce a
+multi-megabyte file that goes stale the moment SAT republishes the catalog — precisely
+the "catalogs are hardcoded snapshots that will drift" problem flagged in the original
+audit. Five catalogs over 300 enumerated values (`c_CodigoPostal`, `c_ClaveProdServ`,
+`c_ClaveUnidad`, `c_Colonia`, `c_Municipio`) are typed as plain `string` instead, with
+runtime validation against a SQLite catalog database (in progress — see
+`Schemas40/xsd/README.md` for the exact catalogs and sizes, and how to regenerate).
+Every catalog under that threshold stays a real, compile-time-checked C# enum, extracted
+into a slim `catCFDI-slim.xsd` fed to `xsd.exe` alongside a locally-rewritten
+`cfdv40-local.xsd`/`Pagos20-local.xsd` (imports pointed at local files; the five large
+catalogs retyped to `xs:string`). The unmodified official `cfdv40.xsd`/`Pagos20.xsd` are
+also vendored, for later schema validation against SAT's real, stricter contract.
