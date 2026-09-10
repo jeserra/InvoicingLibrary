@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using TRSF.Invoicing.Translates;
 using TRSF.Invoicing.BindingModels;
 using System.Collections.Generic;
@@ -7,18 +7,17 @@ using System.Linq;
 
 namespace TRSF.Invoicing.Test
 {
-    [TestClass]
     public class TranslateModelImpuestosToCFDIUnitTest
     {
-        [TestMethod]
+        [Fact]
         public void TranslateImpuestoTest()
         {
             string input = "ISR";
             var output = TranslateModelImpuestosToCFDI.TranslateImpuesto(input);
-            Assert.AreEqual(cfdi33.c_Impuesto.Item001, output);
+            Assert.Equal(cfdi33.c_Impuesto.Item001, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateImpuestoInvalidTest()
         {
             string input = "ITT";
@@ -29,20 +28,20 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
 
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateTipoFactorTest()
         {
             string input = "Cuota";
             var output = TranslateModelImpuestosToCFDI.TranslateTipoFactor(input);
-            Assert.AreEqual(cfdi33.c_TipoFactor.Cuota, output);
+            Assert.Equal(cfdi33.c_TipoFactor.Cuota, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateTipoFactorInvalidTest()
         {
             string input = "CuotaInvalida";
@@ -53,19 +52,19 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateTasaOCuotaTrasladoTest()
         {
             string input = "0.0298800";
             var output = TranslateModelImpuestosToCFDI.TranslateTasaOCuotaTraslado(input);
-            Assert.AreEqual(cfdi33.c_TasaOCuota.Item0298800, output);
+            Assert.Equal(cfdi33.c_TasaOCuota.Item0298800, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateTasaOCuotaTrasladoInvalidTest()
         {
             string input = "029880023232";
@@ -75,12 +74,12 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
 
-         [TestMethod]
+         [Fact]
          public void TranslateConceptosSinImpuestosTest()
         {
                  var input = new List<BindingModels.Concepto>();
@@ -99,11 +98,11 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelConceptosToCFDI.TranslateConceptos(input);
-                Assert.AreEqual(null, output.First().Impuestos);
+                Assert.Equal(null, output.First().Impuestos);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(false);
+                Assert.True(false);
             }
         }
     }

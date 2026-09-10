@@ -1,5 +1,5 @@
 ﻿using TRSF.Invoicing.Translates;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +8,9 @@ using System.Threading.Tasks;
 
 namespace TRSF.Invoicing.Test
 {
-    [TestClass]
     public class TranslateModelCuadroImpuestos
     {
-        [TestMethod]
+        [Fact]
         public void TranslateCuadroImpuestosISR_Retenido_Exento()
         {
             var input = new List<BindingModels.Concepto>();
@@ -44,16 +43,16 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToTotalImpuestos.TranslateCuadroImpuesto(input);
-                Assert.AreEqual(100, output.TotalImpuestosRetenidos );
-                Assert.AreEqual(cfdi33.c_Impuesto.Item001, output.Retenciones.FirstOrDefault().Impuesto);
+                Assert.Equal(100, output.TotalImpuestosRetenidos );
+                Assert.Equal(cfdi33.c_Impuesto.Item001, output.Retenciones.FirstOrDefault().Impuesto);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(false);
+                Assert.True(false);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCuadroImpuestosIVA_Retenido_Exento()
         {
             var input = new List<BindingModels.Concepto>();
@@ -86,16 +85,16 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToTotalImpuestos.TranslateCuadroImpuesto(input);
-                Assert.AreEqual(100, output.TotalImpuestosRetenidos);
-                Assert.AreEqual(cfdi33.c_Impuesto.Item002, output.Retenciones.FirstOrDefault().Impuesto);
+                Assert.Equal(100, output.TotalImpuestosRetenidos);
+                Assert.Equal(cfdi33.c_Impuesto.Item002, output.Retenciones.FirstOrDefault().Impuesto);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(false);
+                Assert.True(false);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCuadroImpuestosISR_Trasladado_Exento()
         {
             var input = new List<BindingModels.Concepto>();
@@ -128,19 +127,19 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToTotalImpuestos.TranslateCuadroImpuesto(input);
-                Assert.AreEqual(100, output.TotalImpuestosTrasladados);
-                Assert.AreEqual(cfdi33.c_Impuesto.Item001, output.Traslados.FirstOrDefault().Impuesto);
-                Assert.AreEqual(cfdi33.c_TasaOCuota.Item0000000, output.Traslados.FirstOrDefault().TasaOCuota);
-                Assert.AreEqual(cfdi33.c_TipoFactor.Exento, output.Traslados.FirstOrDefault().TipoFactor);
+                Assert.Equal(100, output.TotalImpuestosTrasladados);
+                Assert.Equal(cfdi33.c_Impuesto.Item001, output.Traslados.FirstOrDefault().Impuesto);
+                Assert.Equal(cfdi33.c_TasaOCuota.Item0000000, output.Traslados.FirstOrDefault().TasaOCuota);
+                Assert.Equal(cfdi33.c_TipoFactor.Exento, output.Traslados.FirstOrDefault().TipoFactor);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(false);
+                Assert.True(false);
             }
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TranslateCuadroSinImpuestos()
         {
             var input = new List<BindingModels.Concepto>();
@@ -161,11 +160,11 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToTotalImpuestos.TranslateCuadroImpuesto(input); 
-                Assert.AreEqual(null, output);
+                Assert.Equal(null, output);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(false);
+                Assert.True(false);
             }
         }
     }

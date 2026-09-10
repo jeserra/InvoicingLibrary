@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using TRSF.Invoicing.Translates;
  
 namespace TRSF.Invoicing.Test
@@ -9,7 +9,6 @@ namespace TRSF.Invoicing.Test
     /// <summary>
     /// Summary description for TranslateModelToCFDIUnitTest
     /// </summary>
-    [TestClass]
     public class TranslateModelToCFDIUnitTest
     {
         public TranslateModelToCFDIUnitTest()
@@ -19,59 +18,19 @@ namespace TRSF.Invoicing.Test
             //
         }
 
-        private TestContext testContextInstance;
 
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
-       
-
-        [TestMethod]
+        [Fact]
         public void TranslateUsoCFDITest()
         {
             string input = "G01";
 
             var output = TranslateModelsToCatalogosCFDI.TranslateUsoCFDI(input);
-            Assert.AreEqual(cfdi33.c_UsoCFDI.G01, output);
+            Assert.Equal(cfdi33.c_UsoCFDI.G01, output);
 
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TranslateUsoCFDIInvalidTest()
         {
             string input = "T01";
@@ -83,19 +42,19 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCodigoPostalTest()
         {
             string input = "99100";
             var output = TranslateModelsToCatalogosCFDI.TranslateCodigoPostal(input);
-            Assert.AreEqual(cfdi33.c_CodigoPostal.Item99100, output);
+            Assert.Equal(cfdi33.c_CodigoPostal.Item99100, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCodigoPostalInvalidTest()
         {
             string input = "900";
@@ -106,21 +65,21 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateRegimenFiscalTest()
         {
             string input = "601";
 
             var output = TranslateModelsToCatalogosCFDI.TranslateRegimenFiscal(input);
-            Assert.AreEqual(cfdi33.c_RegimenFiscal.Item601, output);
+            Assert.Equal(cfdi33.c_RegimenFiscal.Item601, output);
 
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateRegimenFiscalInvalidTest()
         {
             string input = "Item601";
@@ -131,19 +90,19 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateClaveProdServTest()
         {
             string input = "01010101";
             var output = TranslateModelsToCatalogosCFDI.TranslateClaveProdServ(input);
-            Assert.AreEqual(cfdi33.c_ClaveProdServ.Item01010101, output);
+            Assert.Equal(cfdi33.c_ClaveProdServ.Item01010101, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateClaveProdServInvalidTest()
         {
             string input = "ITEM10202402";
@@ -154,19 +113,19 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateClaveUnidadTest()
         {
             string input = "A111";
             var output = TranslateModelsToCatalogosCFDI.TranslateClaveUnidad(input);
-            Assert.AreEqual(cfdi33.c_ClaveUnidad.A111, output);
+            Assert.Equal(cfdi33.c_ClaveUnidad.A111, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateClaveUnidadInvalidTest()
         {
             string input = "8888888888";
@@ -177,21 +136,21 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateFormaPagoTest()
         {
             bool specifiedField = false;
             string input = "01";
             var output = TranslateModelsToCatalogosCFDI.TranslateFormaPago(input, ref specifiedField);
-            Assert.AreEqual(true, specifiedField);
-            Assert.AreEqual(cfdi33.c_FormaPago.Item01, output);
+            Assert.Equal(true, specifiedField);
+            Assert.Equal(cfdi33.c_FormaPago.Item01, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateFormaPagoInvalidTest()
         {
             string input = "8888888888";
@@ -203,11 +162,11 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateFormaPagoNullTest()
         {
             bool specifiedField = false;
@@ -215,7 +174,7 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToCatalogosCFDI.TranslateFormaPago(input, ref specifiedField);
-                Assert.AreEqual(false, specifiedField);
+                Assert.Equal(false, specifiedField);
             }
             catch (InvalidCastException)
             {
@@ -223,17 +182,17 @@ namespace TRSF.Invoicing.Test
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateMetodoPagoTest()
         {
             string input = "PUE";
             bool specifiedField = false;
             var output = TranslateModelsToCatalogosCFDI.TranslateMetodoPago(input, ref specifiedField);
-            Assert.AreEqual(true, specifiedField);
-            Assert.AreEqual(cfdi33.c_MetodoPago.PUE, output);
+            Assert.Equal(true, specifiedField);
+            Assert.Equal(cfdi33.c_MetodoPago.PUE, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateMetodoPagoInvalidTest()
         {
             string input = "8888888888";
@@ -245,11 +204,11 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateMetodoPagoNull()
         {
             string input = null;
@@ -257,32 +216,32 @@ namespace TRSF.Invoicing.Test
             try
             {
                 var output = TranslateModelsToCatalogosCFDI.TranslateMetodoPago(input, ref specifiedField);
-                Assert.AreEqual(false, specifiedField);
+                Assert.Equal(false, specifiedField);
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TranslateMoneda()
         {
             string input = "XXX";
             var output = TranslateModelsToCatalogosCFDI.TranslateMoneda(input);
-            Assert.AreEqual(cfdi33.c_Moneda.XXX, output);
+            Assert.Equal(cfdi33.c_Moneda.XXX, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateMonedaMXN()
         {
             string input = "MXN";
             var output = TranslateModelsToCatalogosCFDI.TranslateMoneda(input);
-            Assert.AreEqual(cfdi33.c_Moneda.MXN, output);
+            Assert.Equal(cfdi33.c_Moneda.MXN, output);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateMonedaInvalid()
         {
             string input = "8888888888";
@@ -293,42 +252,41 @@ namespace TRSF.Invoicing.Test
             }
             catch (InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
 
-        [Ignore]
-        [TestMethod]
+        [Fact(Skip = "Timezone-offset-dependent; result depends on the local machine's offset")]
         public void TranslateFechaTest()
         {
             // Revisar el cambio de hora. PRobablemente por el offset
             DateTime input = DateTime.Parse("2017-06-24T08:56:06.155Z");
             var output = TranslateModelsToCatalogosCFDI.TranslateFecha(input);
             var result = output.ToString("yyyy-MM-ddThh:mm:ss");
-            Assert.AreEqual("2017-06-24T03:56:06", result);
+            Assert.Equal("2017-06-24T03:56:06", result);
         }
 
 
-        [TestMethod]
+        [Fact]
         public void TranslateCadenaPagoTest()
         {
            
             var input = "01";
             var output = TranslateModelsToCatalogosCFDI.TranslateToCadenaPago(input, out bool isnullValue);
-            Assert.AreEqual(isnullValue, false);
-            Assert.AreEqual(output, cfdi33.c_TipoCadenaPago.Item01);
+            Assert.Equal(isnullValue, false);
+            Assert.Equal(output, cfdi33.c_TipoCadenaPago.Item01);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCadenaPagoNullTest()
         {
 
             string input = null;
             var output = TranslateModelsToCatalogosCFDI.TranslateToCadenaPago(input, out bool isnullValue);
-            Assert.AreEqual(isnullValue, true);
+            Assert.Equal(isnullValue, true);
         }
 
-        [TestMethod]
+        [Fact]
         public void TranslateCadenaPagoInvalidTest()
         {
             try
@@ -339,7 +297,7 @@ namespace TRSF.Invoicing.Test
             }
             catch(InvalidCastException)
             {
-                Assert.IsTrue(true);
+                Assert.True(true);
             }
         }
     }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.NetworkInformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using TRSF.Invoicing.CFDI;
 using NSubstitute;
 using TRSF.Invoicing.Interfaces;
@@ -10,7 +10,6 @@ using System.IO;
 
 namespace TRSF.Invoicing.Test.CFDI
 {
-    [TestClass]
     public class CFDIv33Test
     {
         public BindingModels.Comprobante _testComprobante;
@@ -29,8 +28,7 @@ namespace TRSF.Invoicing.Test.CFDI
 
 
 
-        [TestInitialize]
-        public void InitializeComprobante()
+        public CFDIv33Test()
         {
             InitializeRepository();
 
@@ -117,28 +115,28 @@ namespace TRSF.Invoicing.Test.CFDI
             };
         }
 
-        [TestMethod]
+        [Fact]
         public void CreateCFDITest()
         {
             var cfdiController = new CFDIv33( _MockRepository, _moqSatProvider);
             var xmlComprobante = cfdiController.CreateCFDI(_testComprobante);
             File.WriteAllText(Path.Combine(Path.GetTempPath(), $"{DateTime.Now:ddMMyyyy}.xml"), xmlComprobante);
-            Assert.IsTrue(!String.IsNullOrEmpty(xmlComprobante));
+            Assert.True(!String.IsNullOrEmpty(xmlComprobante));
         }
 
-        [TestMethod]
+        [Fact]
         public void SerializeCFDITest()
         {
             var CFDISerialize =
                     JsonSerializer.Serialize(_testComprobante);
 
             Console.WriteLine(CFDISerialize);
-            Assert.IsTrue(true);
+            Assert.True(true);
 
         }
 
 
-        [TestMethod]
+        [Fact]
         public void OriginalChain33Test()
         {
             
@@ -160,10 +158,10 @@ namespace TRSF.Invoicing.Test.CFDI
                                 "<cfdi:Complemento/>" +
                                 "</cfdi:Comprobante>";
             var output = cfdiController.GetOriginalChain(xmlComprobante);
-            Assert.AreEqual(output, ExpectedOutput);
+            Assert.Equal(output, ExpectedOutput);
         }
 
-        [TestMethod]
+        [Fact]
         public void GetSealTest()
         {
 
@@ -178,7 +176,7 @@ namespace TRSF.Invoicing.Test.CFDI
             var expected = "EeIJKNsieBkYpeEFN/2IUOxJcGjs5TNBEvbHpWwu+61OUevVbUARMTBjNC+OKnTFIReUUy6pVKxAQ6p3x24jj6kTnI205/Chca23VAeaJeG8QKfYY32LaKtdaJmDTMxm/79lrLKQfRda4s7abMNCqcXQu+0lk56d5gOc5IiCwSMcc0/DuDYhQ/WaF9vux5M19vPOcN8wyUuiRtaDS3YzLIGRk45BjMaQGhOZ1mk5+wQP9eFaaMfOXVnzlk2fWJtqnb7/B3dIlvFin6Bn6AVhtLkFMrC0plAZJsAVv589/rPiApAEdNCeSvySnJwTZg0ZlQ7c+PGGL7V/dJcYFH1Mrw==";
 
             var sello = cfdiController .GetSeal(SHA256Hash, privateKey);
-            Assert.AreEqual(sello, expected);
+            Assert.Equal(sello, expected);
 
         }
     }

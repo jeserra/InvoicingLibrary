@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.NetworkInformation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using TRSF.Invoicing.CFDI;
 using NSubstitute;
 using TRSF.Invoicing.Interfaces;
@@ -11,7 +11,6 @@ using System.Collections.Generic;
 
 namespace TRSF.Invoicing.Test.Bindings
 {
-    [TestClass]
     public class PagosBindingTest
     {
         public BindingModels.Comprobante _testComprobante;
@@ -29,21 +28,20 @@ namespace TRSF.Invoicing.Test.Bindings
             _moqSatProvider = new SatProviderMoq();
         }
 
-        [TestInitialize]
-        public void InitializeComprobante()
+        public PagosBindingTest()
         {
             InitializeRepository();
         }
 
-        [TestMethod]
+        [Fact]
         public void GenerateEmptyComprobantePagos()
         {
             var comprobante = GenerateComprobantePago.GenerateNew();
-            Assert.IsNotNull(comprobante);
+            Assert.NotNull(comprobante);
              
         }
 
-        [TestMethod]
+        [Fact]
         public void GenerateComprobantePagosTest()
         {
             var _testPago = GenerateComprobantePago.GenerateNew();
@@ -93,7 +91,7 @@ namespace TRSF.Invoicing.Test.Bindings
 
             var cfdiController = new CFDIv33(_MockRepository, _moqSatProvider);
             var xmlComprobante = cfdiController.CreateCFDI(_testPago);
-            Assert.IsNotNull(_testPago);
+            Assert.NotNull(_testPago);
         }
         
     }

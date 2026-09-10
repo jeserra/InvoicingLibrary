@@ -1,32 +1,29 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using TRSF.Invoicing.cfdi33;
 
 namespace TRSF.Invoicing.Test
 {
-    [TestClass]
     public class cfdi33Test
     {
         TRSF.Invoicing.cfdi33.Comprobante comprobante = null;
-         [Ignore]   
-        [TestMethod]
+
+        [Fact(Skip = "Enum ToString() returns 'Item01010101', not '01010101' - assertion is incorrect as written")]
         public void ObtenerItemClaveProducto()
         {
             var item = c_ClaveProdServ.Item01010101;
-            Assert.AreEqual(item.ToString(), "01010101");
+            Assert.Equal(item.ToString(), "01010101");
         }
 
-        [TestMethod]
+        [Fact]
         public void ObtenerClaveProductoByItem ()
         {
             c_ClaveProdServ item;
            Enum.TryParse("Item01010101", out  item);
-            Assert.IsInstanceOfType(item, typeof(c_ClaveProdServ));
+            Assert.IsType<c_ClaveProdServ>(item);
         }
 
-         
-        [TestInitialize]
-        public void CreateInvoice33()
+        public cfdi33Test()
         {
             comprobante = new cfdi33.Comprobante()
             {

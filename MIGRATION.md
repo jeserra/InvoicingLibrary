@@ -142,3 +142,33 @@ a `TRSF` umbrella namespace, ahead of the public release:
   worked around by moving its contents into the new `TRSF.Invoicing/` folder instead of
   renaming the directory in place. The old, now-empty `Invoicing/` folder may need a
   manual delete once whatever holds it open is closed.
+
+## Interlude — test project: MSTest → xUnit v3
+
+- `[TestClass]` removed, `[TestMethod]` → `[Fact]`, `Assert.AreEqual`/`IsTrue`/`IsFalse`/
+  `IsNotNull` → `Assert.Equal`/`True`/`False`/`NotNull`, `Assert.IsInstanceOfType(x,
+  typeof(T))` → `Assert.IsType<T>(x)`.
+- `[TestInitialize]` methods (5 of them) converted to constructors — xUnit creates a
+  fresh test class instance per test, so the constructor *is* the per-test setup hook;
+  there's no direct attribute equivalent.
+- The 3 `[Ignore]`d tests became `[Fact(Skip = "...")]` with an actual reason each,
+  written from what the test itself revealed was wrong (two assert an enum's `.ToString()`
+  equals a bare numeric string it never will; one is timezone-offset-dependent per its
+  own inline comment) — the original `[Ignore]` attributes carried no reason at all.
+- Deleted a stale MSTest-template `TestContext` property block from
+  `TranslateModelToCFDIUnitTest.cs` (VS-generated boilerplate, unused, and `TestContext`
+  doesn't exist outside MSTest).
+- Chose **xUnit v3** (not v2) — it's the actively developed line and, unlike v2, runs
+  natively on `Microsoft.Testing.Platform` (MTP) rather than the legacy VSTest adapter.
+- Hit a .NET 10 SDK change along the way: `dotnet test` on .NET 10 no longer supports
+  the VSTest execution path by default. Fixed by adding a `global.json` at the repo root
+  with `"test": { "runner": "Microsoft.Testing.Platform" }` — the opt-in is a `global.json`
+  setting, not a project-level MSBuild property.
+- Verified: **47 passed / 3 skipped / 0 failed** — same result as MSTest, with the skip
+  reasons now visible directly in `dotnet test` output instead of silently disappearing.
+- Noted but not fixed (pre-existing, out of scope for this migration): xUnit's analyzer
+  package flagged several test-quality smells that MSTest's own analyzer had also
+  flagged after the .NET 10 port — swapped `expected`/`actual` argument order in several
+  `Assert.Equal` calls, a couple of `Assert.Equal(true/false, x)` that should be
+  `Assert.True`/`False`, and a helper method on a couple of test classes that's public
+  but not itself a test.

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 using  NSubstitute;
 using  TRSF.Invoicing.Translates;
 using  TRSF.Invoicing.BindingModels;
@@ -8,13 +8,11 @@ using  TRSF.Invoicing.cfdi33;
 
 namespace TRSF.Invoicing.Test.Translates
 {
-    [TestClass]
     public class TranslateModelsToConsumoDeCombustiblesTest
     {
         private IConsumoDeCombustibles input;
 
-        [TestInitialize]
-        public void TestInitialize()
+        public TranslateModelsToConsumoDeCombustiblesTest()
         {
             input = new BindingModels.ConsumoDeCombustibles()
             {
@@ -46,11 +44,11 @@ namespace TRSF.Invoicing.Test.Translates
                  }
             };
         }
-        [TestMethod]
+        [Fact]
         public void TranslateConsumoDeCombustible()
         {
              var output = TRSF.Invoicing.Translates.TranslateModelsToConsumoDeCombustibles.To(input);
-            Assert.IsNotNull(output);
+            Assert.NotNull(output);
 
         }
     }
