@@ -289,3 +289,47 @@ Compared every `BindingModels` class field-by-field against the real generated
 
 Verified: 52 passed / 3 skipped / 0 failed, unchanged — confirms every addition here is
 purely additive and the still-active CFDI 3.3 path is untouched.
+
+## Interlude — build a Receptor from a Constancia de Situación Fiscal (CSF)
+
+Requested feature, timed well against the new CFDI 4.0 mandatory receptor fields: SAT's
+own "Constancia de Situación Fiscal" PDF is the canonical source of exactly the two new
+required fields (`RegimenFiscalReceptor`, `DomicilioFiscalReceptor`), which are
+otherwise annoying for callers to collect reliably.
+
+Grounded the parser in a real sample CSF the user provided locally (their own document —
+never committed, and no real RFC/CURP/name from it appears anywhere in the repo; every
+test fixture uses entirely invented identities that mirror the same document
+*structure*). Verified the exact text iText7 (already a project dependency, via
+`PrintPDFService`) produces from that real PDF before writing any regex, rather than
+guessing at line-break/whitespace behavior.
+
+Design: `PdfConstanciaFiscalReader` is a thin wrapper that only extracts text via
+iText7; all the actual parsing logic lives in `ConstanciaFiscalTextParser.Parse(string)`,
+which is fully unit-testable without a PDF at all. A CSF can list more than one active
+regime at once (the sample document has two: salaried employment since 2015, plus a
+professional-services activity added in 2022) — `ConstanciaSituacionFiscal.RegimenPrincipal()`
+picks the most recently started one with no end date as a sensible default, and
+`ToReceptor(usoCFDI, regimenFiscalCodigo)` lets a caller override that when the invoice
+needs a different one of the taxpayer's regimes.
+
+One real gap found along the way: the CSF prints each regime as free text (e.g.
+"Régimen de Sueldos y Salarios e Ingresos Asimilados a Salarios"), not as its catalog
+code ("605") — added `CatalogoRegimenFiscalTexto`, a description→code lookup for all 23
+`c_RegimenFiscal` values, with a substring-match fallback for minor wording variance
+(e.g. the CSF says "las Personas Físicas con Actividades..." — with "las" — while SAT's
+own catalog text for code 612 doesn't include it).
+
+Field recognition is best-effort against the current CSF layout (not a versioned,
+stable format) — unrecognized fields come back `null` rather than throwing, and the
+persona-moral case (`Denominación o Razón Social:` instead of `Nombre (s)`/apellidos) is
+handled from domain knowledge, not a second real sample.
+
+Verified twice: 6 new unit tests against synthetic text covering persona física, persona
+moral, and the "everything unrecognized" case (58 passed / 3 skipped / 0 failed
+overall, up from 52/3); and once more, transiently, against the real sample PDF end to
+end through the actual `PdfConstanciaFiscalReader` — both regimes recognized with the
+correct codes (605, 612), `RegimenPrincipal()` correctly picked 612 (the more recent of
+the two), and the resulting `Receptor` carried the real postal code through correctly.
+That verification run printed only boolean "was this recognized" checks and the postal
+code (not sensitive on its own) — never the real RFC/CURP/name — and used no repo files.
