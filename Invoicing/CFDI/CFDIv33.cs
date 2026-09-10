@@ -33,65 +33,36 @@ namespace Invoicing.CFDI
 
         public  string CreateCFDI(Invoicing.BindingModels.Comprobante apiComprobante, bool Timbrado = true)
         {
-            try
-            {
-                long transaccion = 100;
-                var comprobante = Translates.TranslateModelToCFDI.TranslateToCFDI(apiComprobante);
-                comprobante.Certificado = CertificatesRepository.GetCertificate(comprobante.NoCertificado).CerFile;
-                var xmlComprobante = GetXML(comprobante);
-                comprobante.Sello = SetSeal(comprobante, xmlComprobante, comprobante.NoCertificado);
-                var xmlComprobanteSellado = GetXML(comprobante);
+            long transaccion = 100;
+            var comprobante = Translates.TranslateModelToCFDI.TranslateToCFDI(apiComprobante);
+            comprobante.Certificado = CertificatesRepository.GetCertificate(comprobante.NoCertificado).CerFile;
+            var xmlComprobante = GetXML(comprobante);
+            comprobante.Sello = SetSeal(comprobante, xmlComprobante, comprobante.NoCertificado);
+            var xmlComprobanteSellado = GetXML(comprobante);
 
-                if (!Timbrado)
-                    return xmlComprobante;
-                else
-                {
-                    return Timbrar(apiComprobante, xmlComprobanteSellado, transaccion);
-                }
-              
-            }
-            catch (Exception ex)
+            if (!Timbrado)
+                return xmlComprobante;
+            else
             {
-                throw ex;
+                return Timbrar(apiComprobante, xmlComprobanteSellado, transaccion);
             }
-
         }
 
         public string Timbrar(Invoicing.BindingModels.Comprobante apiComprobante, string xmlComprobanteSellado, long transaccion)
         {
-            try
-            {  
-                var xmlTimbrado = SatProvider.Timbrar(apiComprobante.Emisor.RFC, xmlComprobanteSellado, transaccion);
-                var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
-                apiComprobante.UUID = Guid.Parse(timbrado.UUID);
-                apiComprobante.FechaTimbrado = timbrado.FechaTimbrado;
-                return xmlTimbrado;
-            }
-            catch (Exception ex)
-            {
-                throw;
-                //Console.WriteLine(ex.Message);
-                // Escribir en el log el error del timbrado y avisar al usuario
-                //return xmlComprobanteSellado;
-            }
+            var xmlTimbrado = SatProvider.Timbrar(apiComprobante.Emisor.RFC, xmlComprobanteSellado, transaccion);
+            var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
+            apiComprobante.UUID = Guid.Parse(timbrado.UUID);
+            apiComprobante.FechaTimbrado = timbrado.FechaTimbrado;
+            return xmlTimbrado;
         }
 
         public string Timbrar(string RFCEmisor, string xmlComprobanteSellado, long transaccion)
         {
-            try
-            {
-                var xmlTimbrado = SatProvider.Timbrar(RFCEmisor, xmlComprobanteSellado, transaccion);
-                var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
-                
-                return xmlTimbrado;
-            }
-            catch (Exception ex)
-            {
-                throw;
-                //Console.WriteLine(ex.Message);
-                // Escribir en el log el error del timbrado y avisar al usuario
-                //return xmlComprobanteSellado;
-            }
+            var xmlTimbrado = SatProvider.Timbrar(RFCEmisor, xmlComprobanteSellado, transaccion);
+            var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
+
+            return xmlTimbrado;
         }
         public string AgregarConfirmacion (string xml,  string confirmacion)
         {

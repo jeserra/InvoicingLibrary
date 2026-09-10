@@ -21,8 +21,8 @@ namespace Invoicing.QRProviders
 {
     public class EcodexQRProvider:IQRProvider
     {
-        static HttpClient client = new HttpClient();
-        static string baseUrl =  "https://pruebasapi.ecodex.com.mx";
+        static readonly HttpClient client = new HttpClient();
+        readonly string baseUrl;
         static string TokenPath = "/token?version=2";
         static string QRPath = "/api/documentos/qr/";
 
@@ -44,8 +44,8 @@ namespace Invoicing.QRProviders
                 nvc.Add(new KeyValuePair<string, string>("rfc", rfc));
                 nvc.Add(new KeyValuePair<string, string>("grant_type", "authorization_token"));
 
-                
-                HttpResponseMessage response =   client.PostAsync(path, new FormUrlEncodedContent(nvc), CancellationToken.None).Result;
+
+                HttpResponseMessage response = await client.PostAsync(path, new FormUrlEncodedContent(nvc), CancellationToken.None);
                 if (response.IsSuccessStatusCode)
                 {
                     String token = await response.Content.ReadAsStringAsync();
@@ -60,7 +60,7 @@ namespace Invoicing.QRProviders
 
             }
         }
-        
+
         public async Task <byte[]> GenerateQR(string rfc, string UUID)
         {
             try
@@ -69,10 +69,11 @@ namespace Invoicing.QRProviders
 
                 var path = baseUrl + QRPath + UUID;
 
-                var token = getTokenAsync<tokenmodel>(rfc).Result;
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.access_token);
-                client.DefaultRequestHeaders.Add("X-Auth-Token", ecodexprovider.ObtenerHash(token.service_token));
-                HttpResponseMessage response = client.GetAsync(path, CancellationToken.None).Result;
+                var token = await getTokenAsync<tokenmodel>(rfc);
+                var requestMessage = new HttpRequestMessage(HttpMethod.Get, path);
+                requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.access_token);
+                requestMessage.Headers.Add("X-Auth-Token", ecodexprovider.ObtenerHash(token.service_token));
+                HttpResponseMessage response = await client.SendAsync(requestMessage, CancellationToken.None);
                 if (response.IsSuccessStatusCode)
                 {
                     var imageQR = await response.Content.ReadAsByteArrayAsync();
@@ -92,7 +93,7 @@ namespace Invoicing.QRProviders
                 System.Console.Write("Error al impriimir {0}", ex.Message);
                 throw;
             }
-             
+
         }
 
 

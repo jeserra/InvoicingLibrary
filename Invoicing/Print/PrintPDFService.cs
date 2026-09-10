@@ -26,11 +26,7 @@ namespace Invoicing.Print
 {
     public class PrintPDFService
     {
-         public static string ImageLogo { get; set; }
-        public static byte[] ImageQR { get; set; }
-        public static byte[] ImageLogoMem { get; set; }
-
-        public static void PrintCFDIPDF( cfdi33.Comprobante comprobante, ref  MemoryStream stream )
+        public static void PrintCFDIPDF( cfdi33.Comprobante comprobante, ref  MemoryStream stream, byte[] imageQR, string emisorDireccionLinea1 = null, string emisorDireccionLinea2 = null )
         {
             
             var datosTimbrado = new cfdi33.TimbreFiscalDigital();
@@ -100,8 +96,8 @@ namespace Invoicing.Print
 
 
 
-            tableEmisor.AddCell(getNormalCell("Calle Homero 538 Int 303", 9, 1,2).SetTextAlignment(TextAlignment.CENTER));
-            tableEmisor.AddCell(getNormalCell("Colonia Polanco V Sección  CP 11560", 9,1,2).SetTextAlignment(TextAlignment.CENTER));
+            tableEmisor.AddCell(getNormalCell(emisorDireccionLinea1 ?? String.Empty, 9, 1,2).SetTextAlignment(TextAlignment.CENTER));
+            tableEmisor.AddCell(getNormalCell(emisorDireccionLinea2 ?? String.Empty, 9,1,2).SetTextAlignment(TextAlignment.CENTER));
 
          
             tableEmisorReceptor.AddCell(tableImage).SetBorder(Border.NO_BORDER);
@@ -293,7 +289,7 @@ namespace Invoicing.Print
             }
 
             datosSATandQR.AddCell(datosSAT);
-            datosSATandQR.AddCell(createImageCell(ImageQR));
+            datosSATandQR.AddCell(createImageCell(imageQR));
             tableDocto.AddCell(datosSATandQR);
             doc.Add(tableDocto);
             doc.Close();             

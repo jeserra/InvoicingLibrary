@@ -6,7 +6,6 @@ using NSubstitute;
 using Invoicing.Interfaces;
 using Invoicing.Test.Certifcate;
 using Newtonsoft.Json;
-using ProcessCFDI.Controllers;
 using Invoicing.Helpers;
 using Invoicing.BindingModels;
 using System.Collections.Generic;

@@ -18,7 +18,9 @@ namespace Invoicing.CFDI
             SatProvider = satProvider;
         }
          
-        private const string xsltPath = "https://invoicingdefinitions.blob.core.windows.net/xsltxsd/cadenaoriginal_3_3.xslt";
+        public static string CadenaOriginal33XsltPath { get; set; } =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xslt", "cadenaoriginal_3_3.xslt");
+
          public string XMLToString(System.Xml.XmlDocument xmlDoc)
         {
             StringBuilder sb = new StringBuilder();
@@ -31,12 +33,23 @@ namespace Invoicing.CFDI
         {
             StringWriter sw = new StringWriter();
 
+            if (!File.Exists(CadenaOriginal33XsltPath))
+            {
+                throw new FileNotFoundException(
+                    "No se encontro el XSLT de cadena original 3.3. Coloque el archivo " +
+                    "'cadenaoriginal_3_3.xslt' en la ruta indicada, o ajuste " +
+                    "CFDIBase.CadenaOriginal33XsltPath. Este archivo ya no se descarga de " +
+                    "una URL remota por razones de seguridad.",
+                    CadenaOriginal33XsltPath);
+            }
+
             try
             {
                 XslCompiledTransform xslt = new System.Xml.Xsl.XslCompiledTransform();
-                XsltSettings sets = new XsltSettings(true, true);
-                var resolver = new XmlUrlResolver();
-                xslt.Load(xsltPath, sets, resolver);
+                // document()/script deliberadamente deshabilitados (XsltSettings.Default):
+                // el transform ya no proviene de la red, y no hay razon para permitir
+                // que ejecute script embebido ni lea archivos arbitrarios.
+                xslt.Load(CadenaOriginal33XsltPath, XsltSettings.Default, new XmlUrlResolver());
 
                 XmlDocument FromXmlFile = new System.Xml.XmlDocument();
                 FromXmlFile.LoadXml(stringXML);
@@ -75,6 +88,13 @@ namespace Invoicing.CFDI
                 secPassPhrase.AppendChar(passChar);
 
             System.Security.Cryptography.RSACryptoServiceProvider privateKey = LoadPrivateKeyFromString( secPassPhrase, certificate.KeyFile);
+
+            if (privateKey == null)
+            {
+                throw new InvalidOperationException(
+                    "No se pudo descifrar la llave privada del CSD (contrasena incorrecta o " +
+                    "archivo .key corrupto/no valido).");
+            }
 
             return   GetSeal(SHA256hash, privateKey);
         }
