@@ -116,3 +116,29 @@ What changed, and why:
 - Removed the stray internal Word document (`Bitácora mensual de avances técnicos Abril
   2018.docx`) and a committed PDF build artifact from `Invoicing.Test/Resources` and
   `/Output` — neither belonged in a repo about to go public.
+
+## Interlude — rebrand under the TRSF umbrella namespace
+
+Before starting Phase B, renamed everything from `Invoicing`/`ProcessCFDI` to sit under
+a `TRSF` umbrella namespace, ahead of the public release:
+
+- `Invoicing.*` → `TRSF.Invoicing.*` everywhere (namespaces, `using` statements,
+  fully-qualified references) across both projects.
+- `ProcessCFDI.Utils` and the bare `ProcessCFDI` namespace (`Security.cs`, `General.cs`,
+  `UNCAccessWithCredentials.cs`, `ValidateXML.cs`) folded into `TRSF.Invoicing.Utils` —
+  these had inconsistently lived under a different root than the rest of `Utils/` since
+  before this migration started; unifying them was a natural side effect of touching
+  every namespace anyway.
+- Project folders and files renamed to match: `Invoicing/` → `TRSF.Invoicing/`,
+  `Invoicing.csproj`/`.sln` → `TRSF.Invoicing.csproj`/`.sln`, and the same pattern for
+  the test project. `AssemblyName`/`RootNamespace` updated in both `.csproj` files; the
+  `.sln`'s stale `x64`/`stage` platform configs (leftover from the pre-SDK-style project,
+  meaningless now) were dropped down to just `Debug`/`Release|Any CPU` while the file was
+  already being rewritten for the new names.
+- Verified with the same regression tests as Phase A: 47 passed / 3 skipped / 0 failed,
+  unchanged.
+- One rough edge: renaming the `Invoicing/` folder itself hit a Windows file lock from
+  an external process (never identified — not a build server, not a dotnet process);
+  worked around by moving its contents into the new `TRSF.Invoicing/` folder instead of
+  renaming the directory in place. The old, now-empty `Invoicing/` folder may need a
+  manual delete once whatever holds it open is closed.

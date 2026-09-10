@@ -1,0 +1,114 @@
+﻿using System;
+using System.Text;
+using System.IO;
+using System.Security.Cryptography;
+using TRSF.Invoicing.Interfaces;
+using System.Xml.Xsl;
+using System.Xml;
+
+namespace TRSF.Invoicing.CFDI
+{
+    public class CFDIBase
+    {
+        internal ICertificatesRepository CertificatesRepository;
+        internal ISATProvider SatProvider;
+
+        public CFDIBase(ICertificatesRepository certificatesRepository,  ISATProvider satProvider)
+        {
+            CertificatesRepository = certificatesRepository;
+            SatProvider = satProvider;
+        }
+         
+        public static string CadenaOriginal33XsltPath { get; set; } =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xslt", "cadenaoriginal_3_3.xslt");
+
+         public string XMLToString(System.Xml.XmlDocument xmlDoc)
+        {
+            StringBuilder sb = new StringBuilder();
+            System.IO.StringWriter sw = new System.IO.StringWriter(sb);
+            xmlDoc.Save(sw);
+            return sw.ToString();
+        }
+
+        public string GetOriginalChain(string stringXML)
+        {
+            StringWriter sw = new StringWriter();
+
+            if (!File.Exists(CadenaOriginal33XsltPath))
+            {
+                throw new FileNotFoundException(
+                    "No se encontro el XSLT de cadena original 3.3. Coloque el archivo " +
+                    "'cadenaoriginal_3_3.xslt' en la ruta indicada, o ajuste " +
+                    "CFDIBase.CadenaOriginal33XsltPath. Este archivo ya no se descarga de " +
+                    "una URL remota por razones de seguridad.",
+                    CadenaOriginal33XsltPath);
+            }
+
+            try
+            {
+                XslCompiledTransform xslt = new System.Xml.Xsl.XslCompiledTransform();
+                // document()/script deliberadamente deshabilitados (XsltSettings.Default):
+                // el transform ya no proviene de la red, y no hay razon para permitir
+                // que ejecute script embebido ni lea archivos arbitrarios.
+                xslt.Load(CadenaOriginal33XsltPath, XsltSettings.Default, new XmlUrlResolver());
+
+                XmlDocument FromXmlFile = new System.Xml.XmlDocument();
+                FromXmlFile.LoadXml(stringXML);
+
+                xslt.Transform(FromXmlFile, null, sw);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("No se pudo generar la cadena", ex.InnerException);
+            }
+            return sw.ToString();
+        }
+
+        public byte[] GetSHA1(string OriginalChain)
+        {
+            return SHA1.HashData(Encoding.UTF8.GetBytes(OriginalChain));
+        }
+
+        public byte[] GetSHA256(string OriginalChain)
+        {
+            return SHA256.HashData(Encoding.UTF8.GetBytes(OriginalChain));
+        }
+        public string SetSeal(cfdi33.Comprobante CFDIComprobante, string TheXML, string noCertificado)
+        {
+
+            ICertificate certificate = CertificatesRepository.GetCertificate(noCertificado);
+            string OriginalChain = GetOriginalChain(TheXML);
+
+            byte[] SHA256hash = GetSHA256(OriginalChain);
+
+            using RSA privateKey = LoadPrivateKeyFromString(certificate.Pwd, certificate.KeyFile);
+
+            return GetSeal(SHA256hash, privateKey);
+        }
+
+        public string GetSeal(byte[] rgbHash, RSA privateKey)
+        {
+            byte[] signature = privateKey.SignHash(rgbHash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            return Convert.ToBase64String(signature);
+        }
+
+        public RSA LoadPrivateKeyFromString(string password, string keyFile)
+        {
+            byte[] privateKeyBytes = Convert.FromBase64String(keyFile);
+            RSA rsa = RSA.Create();
+            try
+            {
+                rsa.ImportEncryptedPkcs8PrivateKey(password, privateKeyBytes, out _);
+                return rsa;
+            }
+            catch (CryptographicException ex)
+            {
+                rsa.Dispose();
+                throw new InvalidOperationException(
+                    "No se pudo descifrar la llave privada del CSD (contrasena incorrecta o " +
+                    "archivo .key corrupto/no valido).", ex);
+            }
+        }
+
+    }
+}
