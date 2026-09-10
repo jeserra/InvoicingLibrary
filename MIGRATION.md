@@ -259,3 +259,33 @@ real generated database — known-good codes in three of the five catalogs, a ma
 code, and null/empty input. Verified: **52 passed / 3 skipped / 0 failed** (up from 47/3,
 the 5 new tests all passing), confirming the ~5MB database round-trips correctly through
 the project's `CopyToOutputDirectory` content-propagation chain.
+
+### BindingModels gap audit
+
+Compared every `BindingModels` class field-by-field against the real generated
+`Schemas40` classes. Findings, purely additive (nothing removed yet — see below):
+
+- **Must add** (new CFDI 4.0 mandatory fields): `Comprobante.Exportacion` (defaults to
+  `"01"`, domestic), `Receptor.RegimenFiscalReceptor`, `Receptor.DomicilioFiscalReceptor`,
+  and one easy to miss — `Concepto.ObjetoImp`, a **per-concept** mandatory field. (The
+  generated schema code is how this was confirmed rather than assumed: xsd.exe only
+  emits a `FooSpecified` companion property for *optional* value-type attributes, and
+  `ObjetoImp` has none, meaning the schema itself marks it required.)
+- **Should add** (new-in-4.0 optional, real scenarios): `Emisor.FacAtrAdquirente`
+  (third-party issuance), `Receptor.ResidenciaFiscal`/`NumRegIdTrib` (foreign
+  receptors), `Comprobante.TipoCambio`, `Comprobante.Confirmacion`.
+- **Modeling fix**: `UsoCFDI` belongs on `cfdi:Receptor` in the real schema, not
+  `cfdi:Comprobante` — the old wrapper had it on `Comprobante`. Added
+  `Receptor.UsoCFDI` for the new 4.0 path rather than moving the old one, since the
+  *currently still-active* CFDI 3.3 creation path (`CFDIv33`/`TranslateModelToCFDI`)
+  reads `Comprobante.UsoCFDI` — removing it now would break the one working creation
+  path before the 4.0 replacement exists. Both properties coexist until 3.3 is retired.
+- **Deliberately not modeled**: `InformacionGlobal`, `CfdiRelacionados`,
+  `ACuentaTerceros`, `InformacionAduanera`, `CuentaPredial`, `Parte[]`, `Addenda` — all
+  real CFDI 4.0 schema elements, but none of them were in this library's scope even for
+  3.3 (global/simplified invoices, related-CFDI references, third-party billing, customs
+  info, real estate, bundled parts, free-form vendor extensions). Not a 4.0-specific
+  regression; flagged here so it's a documented decision rather than a silent gap.
+
+Verified: 52 passed / 3 skipped / 0 failed, unchanged — confirms every addition here is
+purely additive and the still-active CFDI 3.3 path is untouched.

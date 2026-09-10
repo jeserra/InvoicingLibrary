@@ -39,6 +39,18 @@ namespace TRSF.Invoicing.BindingModels
         public decimal Total { get; set; }
         public string TipoComprobante { get; set; }
         public DateTime Fecha { get; set; }
+
+        /// <summary>
+        /// CFDI 4.0: obligatorio en todo comprobante. "01" = No aplica (operacion
+        /// nacional) es el valor correcto cuando no se trata de una exportacion.
+        /// </summary>
+        public string Exportacion { get; set; } = "01";
+
+        /// <summary>Opcional. Solo aplica si Moneda es distinta de MXN.</summary>
+        public decimal? TipoCambio { get; set; }
+
+        /// <summary>Opcional. Folio de confirmacion emitido por el SAT (montos que lo requieren).</summary>
+        public string Confirmacion { get; set; }
  
         public Emisor Emisor
         {
