@@ -26,6 +26,9 @@ namespace TRSF.Invoicing.CFDI
         public static string CadenaOriginal33XsltPath { get; set; } =
             Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xslt", "cadenaoriginal_3_3.xslt");
 
+        public static string CadenaOriginal40XsltPath { get; set; } =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "xslt", "cadenaoriginal_4_0.xslt");
+
          public string XMLToString(System.Xml.XmlDocument xmlDoc)
         {
             StringBuilder sb = new StringBuilder();
@@ -36,16 +39,21 @@ namespace TRSF.Invoicing.CFDI
 
         public string GetOriginalChain(string stringXML)
         {
+            return GetOriginalChain(stringXML, CadenaOriginal33XsltPath);
+        }
+
+        public string GetOriginalChain(string stringXML, string xsltPath)
+        {
             StringWriter sw = new StringWriter();
 
-            if (!File.Exists(CadenaOriginal33XsltPath))
+            if (!File.Exists(xsltPath))
             {
                 throw new FileNotFoundException(
-                    "No se encontro el XSLT de cadena original 3.3. Coloque el archivo " +
-                    "'cadenaoriginal_3_3.xslt' en la ruta indicada, o ajuste " +
-                    "CFDIBase.CadenaOriginal33XsltPath. Este archivo ya no se descarga de " +
-                    "una URL remota por razones de seguridad.",
-                    CadenaOriginal33XsltPath);
+                    "No se encontro el XSLT de cadena original. Coloque el archivo " +
+                    "correspondiente en la ruta indicada, o ajuste " +
+                    "CFDIBase.CadenaOriginal33XsltPath / CadenaOriginal40XsltPath. Este " +
+                    "archivo ya no se descarga de una URL remota por razones de seguridad.",
+                    xsltPath);
             }
 
             try
@@ -54,7 +62,7 @@ namespace TRSF.Invoicing.CFDI
                 // document()/script deliberadamente deshabilitados (XsltSettings.Default):
                 // el transform ya no proviene de la red, y no hay razon para permitir
                 // que ejecute script embebido ni lea archivos arbitrarios.
-                xslt.Load(CadenaOriginal33XsltPath, XsltSettings.Default, new XmlUrlResolver());
+                xslt.Load(xsltPath, XsltSettings.Default, new XmlUrlResolver());
 
                 XmlDocument FromXmlFile = new System.Xml.XmlDocument();
                 FromXmlFile.LoadXml(stringXML);
@@ -63,7 +71,7 @@ namespace TRSF.Invoicing.CFDI
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "No se pudo generar la cadena original desde el XSLT {XsltPath}", CadenaOriginal33XsltPath);
+                Logger.LogError(ex, "No se pudo generar la cadena original desde el XSLT {XsltPath}", xsltPath);
                 throw new Exception("No se pudo generar la cadena", ex.InnerException);
             }
             return sw.ToString();
@@ -80,9 +88,13 @@ namespace TRSF.Invoicing.CFDI
         }
         public string SetSeal(cfdi33.Comprobante CFDIComprobante, string TheXML, string noCertificado)
         {
+            return SetSeal(TheXML, noCertificado, CadenaOriginal33XsltPath);
+        }
 
+        public string SetSeal(string TheXML, string noCertificado, string xsltPath)
+        {
             ICertificate certificate = CertificatesRepository.GetCertificate(noCertificado);
-            string OriginalChain = GetOriginalChain(TheXML);
+            string OriginalChain = GetOriginalChain(TheXML, xsltPath);
 
             byte[] SHA256hash = GetSHA256(OriginalChain);
 

@@ -47,6 +47,12 @@ namespace TRSF.Invoicing.BindingModels
         public decimal ImpSaldoAnt { get; set; }
         public decimal ImpPagado { get; set; }
         public decimal ImpSaldoInsoluto { get; set; }
+
+        /// <summary>
+        /// Pagos 2.0 (CFDI 4.0): obligatorio. Misma semantica que Concepto.ObjetoImp
+        /// pero a nivel del documento relacionado con el pago.
+        /// </summary>
+        public string ObjetoImpDR { get; set; }
     }
 
      

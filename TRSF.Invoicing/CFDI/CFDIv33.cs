@@ -43,7 +43,7 @@ namespace TRSF.Invoicing.CFDI
             var xmlComprobanteSellado = GetXML(comprobante);
 
             if (!Timbrado)
-                return xmlComprobante;
+                return xmlComprobanteSellado;
             else
             {
                 return Timbrar(apiComprobante, xmlComprobanteSellado, transaccion);

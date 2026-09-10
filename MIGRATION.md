@@ -333,3 +333,92 @@ correct codes (605, 612), `RegimenPrincipal()` correctly picked 612 (the more re
 the two), and the resulting `Receptor` carried the real postal code through correctly.
 That verification run printed only boolean "was this recognized" checks and the postal
 code (not sensitive on its own) — never the real RFC/CURP/name — and used no repo files.
+
+## Phase B (continued) — translate layer, cadena original 4.0, and a working CFDI 4.0 creation path
+
+With the gap-audited `BindingModels` in place, wrote the actual `Translates40/` layer
+that turns them into `cfdi40.Comprobante` object graphs, then wired it end to end so a
+CFDI 4.0 document can actually be built and sealed — mirroring the existing `Translates`/
+`CFDIv33` structure one file at a time rather than one big rewrite, so each piece stayed
+individually reviewable.
+
+**Pagos 2.0 is a real schema rewrite, not a version bump** (as flagged in the plan):
+`DoctoRelacionado` lost `MetodoDePagoDR`, renamed `TipoCambioDR`→`EquivalenciaDR`, and
+gained a new mandatory `ObjetoImpDR`; `ImpSaldoAnt`/`ImpPagado`/`ImpSaldoInsoluto` went
+from optional to mandatory; and a new mandatory `Pagos.Totales` element was added.
+`TranslatesModelsToPagos20.cs` computes `Totales.MontoTotalPagos` as the sum of each
+payment's `Monto`, but deliberately does **not** populate the optional per-payment/
+per-document tax breakdowns (`ImpuestosP`, `ImpuestosDR`, the IVA breakdown in `Totales`)
+— `BindingModels.Pagos` doesn't carry data granular enough to compute them correctly,
+and omitting an optional field is safer than inventing a tax breakdown that might be
+wrong. `ObjetoImpDR` was added to `BindingModels.Pagos.DoctosRelacionados` to satisfy the
+new mandatory field.
+
+**`cfdi40.ComprobanteComplemento.Any` is `XmlElement[]`** (pre-serialized), unlike
+cfdi33's polymorphic `object[] Items` — each complement (ValesDeDespensa,
+ConsumoDeCombustibles, Pagos) now has to be serialized to its own `XmlElement` via
+`XmlSerializer` + `XmlDocument.CreateNavigator().AppendChild()` before being attached,
+handled by a small `SerializarComoElemento<T>` helper in `TranslateModelToCFDI40`.
+
+**Two pre-existing 3.3 bugs found and fixed while porting, not carried forward:**
+- `TranslateModelsToTotalImpuestos.cs` (3.3) never set the required `Base` attribute on
+  Comprobante-level `Traslado`, and grouped totals only by `Impuesto` — two traslados of
+  the same tax at different rates (e.g. IVA 16% and IVA 8%) would have been merged into
+  one incorrect total. The 4.0 version (`TranslateModelsToTotalImpuestos40.cs`) sets
+  `Base` and groups by `Impuesto` **and** `TasaOCuota` together.
+- `CFDIv33.CreateCFDI(..., Timbrado: false)` returned the XML **before** `Sello` was set
+  — silently defeating the documented "test without a PAC" workflow (Phase A/B plan:
+  "generate and digitally seal a valid CFDI without any PAC account"). Fixed in both
+  `CFDIv33` and the new `CFDIv40` to return the sealed XML.
+
+**A C# namespace-ambiguity trap, caught by the compiler, not by inspection:**
+`TranslateModelToCFDI40.cs` lives in `TRSF.Invoicing.Translates40`, a sibling of both
+`TRSF.Invoicing.BindingModels` and `TRSF.Invoicing.cfdi40` — both of which declare a
+`Comprobante` type. With `using TRSF.Invoicing.BindingModels;` in scope, an unqualified
+`Comprobante` parameter silently resolved to `cfdi40.Comprobante` instead (enclosing-
+namespace member lookup wins over `using` directives in C#), producing ~40 cascading
+"does not contain a definition for ..." errors with misleading case-mismatched member
+names. Fixed by dropping the `using` and qualifying every reference as
+`BindingModels.Comprobante` explicitly.
+
+**Vendored the CFDI 4.0 cadena original XSLT** the same way Phase A vendored 3.3's:
+fetched SAT's current `cadenaoriginal_4_0.xslt` plus five includes not present in the
+3.3 tree (`ComercioExterior20`, `Pagos20`, `CartaPorte30`, `CartaPorte31`,
+`HidrocarburosPetro`/`hidrocarburospetroliferos` — CFDI 4.0 dropped `terceros11`,
+`consumodecombustibles` v1, `ecc11`, and `CartaPorte` v1 from the chain entirely),
+rewrote every `xsl:include` from SAT's absolute URLs to the same relative-path
+convention already used under `xslt/cfd/`, and confirmed zero remaining
+`sitio_internet` references before committing. `CFDIBase` gained a
+`CadenaOriginal40XsltPath` static property and version-agnostic `GetOriginalChain`/
+`SetSeal` overloads that take an explicit XSLT path, so both CFDI versions now share one
+implementation instead of duplicating the transform/seal logic.
+
+**Built `CFDIv40`**, mirroring `CFDIv33`: `GetXML` (with the `cfdi:4`/`Pagos20`
+namespaces), `CreateCFDI` (translate → seal via the 4.0 cadena original → optionally
+timbrar), `Timbrar`, `DeserializeXML`.
+
+**New tests** (`CFDIv40Test.cs`), following the same regression-proof pattern
+`OriginalChain33Test` already established for 3.3:
+- `CreateCFDITest` — builds and seals a full CFDI 4.0 sample end to end, asserting the
+  returned XML actually carries a non-empty `Sello` (this is exactly the bug described
+  above — the test would have caught it).
+- `OriginalChain40Test` — a hardcoded expected cadena original string against a hand-
+  built CFDI 4.0 XML sample, run once through the vendored 4.0 XSLT to capture the
+  real output before hardcoding it as the regression baseline.
+- `ValidatesAgainstCfdi40Schema` — schema-validates the generated sample against the
+  vendored `cfdv40-local.xsd` (the same local/slim schema set used to generate
+  `Schemas40/cfdv40.cs`, so no live network call is needed). Along the way, hit and
+  documented a real .NET behavior difference: `XmlSchemaSet.XmlResolver` defaults to
+  `null` on modern .NET (unlike .NET Framework's implicit `XmlUrlResolver`), so
+  relative `<xs:import schemaLocation="...">` references silently fail to resolve and
+  every type from the unresolved namespace reports as "not declared" — a confusing
+  symptom with a one-line fix (`schemaSet.XmlResolver = new XmlUrlResolver();`) once
+  traced back to the actual cause via a standalone isolation repro.
+
+Verified: 64 total / 61 passed / 3 skipped / 0 failed (up from 58/3), including the new
+CFDI 4.0 creation, cadena original, and schema-validation tests, with the CFDI 3.3 path
+untouched except for the `Timbrado: false` seal-ordering fix described above.
+
+**Still open before Phase B is complete**: CFDI 3.2 (`Schemas32`/`CFDIv32`) and the
+duplicated `Comprobante.UsoCFDI` are still present — both stay until the 4.0 path has
+seen real-world exercise, per the plan's explicit sequencing decision.
