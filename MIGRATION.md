@@ -232,3 +232,30 @@ into a slim `catCFDI-slim.xsd` fed to `xsd.exe` alongside a locally-rewritten
 `cfdv40-local.xsd`/`Pagos20-local.xsd` (imports pointed at local files; the five large
 catalogs retyped to `xs:string`). The unmodified official `cfdv40.xsd`/`Pagos20.xsd` are
 also vendored, for later schema validation against SAT's real, stricter contract.
+
+### SQLite catalog validation
+
+Added `ICatalogValidator` to the core library (`TRSF.Invoicing/Interfaces/` — just the
+interface and a `CatalogoGrande` enum naming the five demoted catalogs, zero extra
+dependency) plus a new, separate, opt-in project `TRSF.Invoicing.Catalogs.Sqlite` with
+the default implementation, matching the same pluggable-package pattern already planned
+for the Azure Key Vault certificate repository — the core library never gains a hard
+SQLite dependency.
+
+Wrote a small standalone tool (`tools/GenerateCatalogDb`) that streams `catCFDI.xsd`
+with `XmlReader` (not a DOM load — the file is ~6MB) and populates
+`TRSF.Invoicing.Catalogs.Sqlite/Data/catalogs.sqlite` with one table per large catalog.
+Ran it once: **161,511 rows inserted** (95,777 + 52,747 + 2,418 + 9,999 + 570 — exactly
+matching the enumeration counts from the schema). `CodigoPostal` deduplicates down to
+95,749 distinct rows (`Codigo` is a primary key; 28 codes appear more than once in SAT's
+source with no distinguishing data). Discovered along the way: `catCFDI.xsd` carries no
+per-value description text at all for any of these five catalogs — every entry is a bare
+`<xs:enumeration value="X"/>` — so `Descripcion` is schema-ready but empty today;
+documented in `Schemas40/xsd/README.md` rather than silently shipping a column that
+looks populated but isn't.
+
+Added 5 tests (`TRSF.Invoicing.Test/Catalogs/SqliteCatalogValidatorTest.cs`) against the
+real generated database — known-good codes in three of the five catalogs, a made-up
+code, and null/empty input. Verified: **52 passed / 3 skipped / 0 failed** (up from 47/3,
+the 5 new tests all passing), confirming the ~5MB database round-trips correctly through
+the project's `CopyToOutputDirectory` content-propagation chain.

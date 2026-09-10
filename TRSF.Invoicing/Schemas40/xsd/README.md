@@ -32,10 +32,20 @@ republishes the catalog:
 
 These five are typed as plain `string` in `cfdv40-local.xsd` / the generated model, and are
 validated at runtime against a SQLite catalog database instead of at compile time — see
-`../../Catalogs/`. Every other catalog referenced by CFDI 4.0 or the Pagos 2.0 complement
-(under 300 values each — `c_RegimenFiscal`, `c_UsoCFDI`, `c_Moneda`, `c_Pais`, etc.) is a
-real, compile-time-checked C# enum, generated normally from `catCFDI-slim.xsd`, which
-carries only those smaller catalog definitions extracted from the full `catCFDI.xsd`.
+`ICatalogValidator` (in `TRSF.Invoicing/Interfaces/`, core library, no extra dependency)
+and its default implementation `TRSF.Invoicing.Catalogs.Sqlite.SqliteCatalogValidator`
+(separate opt-in project, depends on `Microsoft.Data.Sqlite`). Every other catalog
+referenced by CFDI 4.0 or the Pagos 2.0 complement (under 300 values each —
+`c_RegimenFiscal`, `c_UsoCFDI`, `c_Moneda`, `c_Pais`, etc.) is a real,
+compile-time-checked C# enum, generated normally from `catCFDI-slim.xsd`, which carries
+only those smaller catalog definitions extracted from the full `catCFDI.xsd`.
+
+**Note on descriptions**: `catCFDI.xsd` carries no human-readable text at all for any of
+these five catalogs — every entry is a bare `<xs:enumeration value="X"/>` with no
+`<xs:documentation>`. `SqliteCatalogValidator.ObtenerDescripcion` and the `Descripcion`
+column in `catalogs.sqlite` exist for forward compatibility (in case a richer data
+source — e.g. INEGI's postal code dataset — is used to populate them later) but are
+empty today. `Existe`/code validation is unaffected — it doesn't need a description.
 
 ## Regenerating
 
@@ -43,3 +53,14 @@ carries only those smaller catalog definitions extracted from the full `catCFDI.
 xsd.exe /c /l:CS /n:TRSF.Invoicing.cfdi40 cfdv40-local.xsd Pagos20-local.xsd catCFDI-slim.xsd tdCFDI.xsd catPagos.xsd
 xsd.exe /c /l:CS /n:TRSF.Invoicing.cfdi40 valesdedespensa.xsd consumodecombustibles.xsd
 ```
+
+## Regenerating the catalog database
+
+`../../../TRSF.Invoicing.Catalogs.Sqlite/Data/catalogs.sqlite` is generated from the same
+`catCFDI.xsd` by a small standalone tool (not part of the shipped library):
+
+```
+dotnet run --project tools/GenerateCatalogDb -- <path-to-catCFDI.xsd> TRSF.Invoicing.Catalogs.Sqlite/Data/catalogs.sqlite
+```
+
+Re-run this whenever SAT republishes `catCFDI.xsd` with updated catalog values.
