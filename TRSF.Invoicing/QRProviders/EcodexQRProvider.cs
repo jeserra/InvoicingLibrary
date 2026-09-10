@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using TRSF.Invoicing.Interfaces;
 using TRSF.Invoicing.Utils;
 
@@ -15,13 +17,15 @@ namespace TRSF.Invoicing.QRProviders
         static readonly HttpClient client = new HttpClient();
         readonly string baseUrl;
         readonly string integratorId;
+        readonly ILogger logger;
         static string TokenPath = "/token?version=2";
         static string QRPath = "/api/documentos/qr/";
 
-        public EcodexQRProvider(string baseUrl, string integratorId)
+        public EcodexQRProvider(string baseUrl, string integratorId, ILogger<EcodexQRProvider> logger = null)
         {
             this.baseUrl = baseUrl;
             this.integratorId = integratorId;
+            this.logger = logger ?? NullLogger<EcodexQRProvider>.Instance;
         }
 
         private string ObtenerHash(string serviceToken)
@@ -51,7 +55,7 @@ namespace TRSF.Invoicing.QRProviders
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                logger.LogError(ex, "Error obteniendo token de Ecodex para RFC {Rfc}", rfc);
                 throw;
             }
         }
@@ -81,7 +85,7 @@ namespace TRSF.Invoicing.QRProviders
             }
             catch (Exception ex)
             {
-                Console.Write("Error al impriimir {0}", ex.Message);
+                logger.LogError(ex, "Error al obtener el QR para UUID {Uuid}", UUID);
                 throw;
             }
         }

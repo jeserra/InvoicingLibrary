@@ -2,6 +2,8 @@
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using TRSF.Invoicing.Interfaces;
 using System.Xml.Xsl;
 using System.Xml;
@@ -12,11 +14,13 @@ namespace TRSF.Invoicing.CFDI
     {
         internal ICertificatesRepository CertificatesRepository;
         internal ISATProvider SatProvider;
+        protected readonly ILogger Logger;
 
-        public CFDIBase(ICertificatesRepository certificatesRepository,  ISATProvider satProvider)
+        public CFDIBase(ICertificatesRepository certificatesRepository,  ISATProvider satProvider, ILogger logger = null)
         {
             CertificatesRepository = certificatesRepository;
             SatProvider = satProvider;
+            Logger = logger ?? NullLogger.Instance;
         }
          
         public static string CadenaOriginal33XsltPath { get; set; } =
@@ -59,6 +63,7 @@ namespace TRSF.Invoicing.CFDI
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "No se pudo generar la cadena original desde el XSLT {XsltPath}", CadenaOriginal33XsltPath);
                 throw new Exception("No se pudo generar la cadena", ex.InnerException);
             }
             return sw.ToString();
@@ -104,6 +109,7 @@ namespace TRSF.Invoicing.CFDI
             catch (CryptographicException ex)
             {
                 rsa.Dispose();
+                Logger.LogError(ex, "No se pudo descifrar la llave privada del CSD (contrasena incorrecta o archivo .key corrupto/no valido)");
                 throw new InvalidOperationException(
                     "No se pudo descifrar la llave privada del CSD (contrasena incorrecta o " +
                     "archivo .key corrupto/no valido).", ex);

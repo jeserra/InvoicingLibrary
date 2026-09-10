@@ -4,6 +4,8 @@ using TRSF.Invoicing.srvTimbrado;
 using TRSF.Invoicing.Utils;
 using System.ServiceModel;
 using TRSF.Invoicing.Interfaces;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace TRSF.Invoicing.CFDIProviders
 {
@@ -12,12 +14,14 @@ namespace TRSF.Invoicing.CFDIProviders
         private readonly string integratorId;
         private readonly Uri timbradoEndpoint;
         private readonly Uri seguridadEndpoint;
+        private readonly ILogger logger;
 
-        public EcodexProvider(string integratorId, Uri timbradoEndpoint, Uri seguridadEndpoint)
+        public EcodexProvider(string integratorId, Uri timbradoEndpoint, Uri seguridadEndpoint, ILogger<EcodexProvider> logger = null)
         {
             this.integratorId = integratorId;
             this.timbradoEndpoint = timbradoEndpoint;
             this.seguridadEndpoint = seguridadEndpoint;
+            this.logger = logger ?? NullLogger<EcodexProvider>.Instance;
         }
 
         public string INTEGRATOR_ID => integratorId;
@@ -42,14 +46,17 @@ namespace TRSF.Invoicing.CFDIProviders
             }
             catch (FaultException<srvTimbrado.FallaServicio> serviceFault)
             {
+                logger.LogError(serviceFault, "Falla de servicio de Ecodex al obtener QR para RFC {Rfc}, numero {Numero}", RFC, serviceFault.Detail.Numero);
                 throw new Exception(String.Format("Error al timbrar  {0} {1}", serviceFault.Message, serviceFault.Detail.Numero));
             }
             catch (FaultException<srvTimbrado.FallaSesion> serviceSesion)
             {
+                logger.LogError(serviceSesion, "Falla de sesion de Ecodex al obtener QR para RFC {Rfc}", RFC);
                 throw new Exception(String.Format("Error al timbrar {0}", serviceSesion.Message));
             }
             catch (FaultException<srvTimbrado.FallaValidacion> faultvalidation)
             {
+                logger.LogError(faultvalidation, "Falla de validacion de Ecodex al obtener QR para RFC {Rfc}", RFC);
                 throw new Exception(String.Format("Error al timbrar {0}", faultvalidation.Message));
             }
         }
@@ -67,14 +74,17 @@ namespace TRSF.Invoicing.CFDIProviders
             }
             catch (FaultException<srvTimbrado.FallaServicio> serviceFault)
             {
+                logger.LogError(serviceFault, "Falla de servicio de Ecodex al timbrar RFC {Rfc}, numero {Numero}", RFC, serviceFault.Detail.Numero);
                 throw new Exception(String.Format("Error al timbrar  {0} {1}", serviceFault.Message, serviceFault.Detail.Numero));
             }
             catch (FaultException<srvTimbrado.FallaSesion> serviceSesion)
             {
+                logger.LogError(serviceSesion, "Falla de sesion de Ecodex al timbrar RFC {Rfc}", RFC);
                 throw new Exception(String.Format("Error al timbrar {0}", serviceSesion.Message));
             }
             catch (FaultException<srvTimbrado.FallaValidacion> faultvalidation)
             {
+                logger.LogError(faultvalidation, "Falla de validacion de Ecodex al timbrar RFC {Rfc}", RFC);
                 throw new Exception(String.Format("Error al timbrar {0}", faultvalidation.Message));
             }
         }

@@ -4,14 +4,16 @@ using TRSF.Invoicing.Utils;
 using System.Xml.Serialization;
 using TRSF.Invoicing.Interfaces;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace TRSF.Invoicing.CFDI
 {
     public class CFDIv33:CFDIBase
     {
-        public CFDIv33(ICertificatesRepository certificatesRepository, ISATProvider satProvider) : base(certificatesRepository, satProvider)
+        public CFDIv33(ICertificatesRepository certificatesRepository, ISATProvider satProvider, ILogger<CFDIv33> logger = null)
+            : base(certificatesRepository, satProvider, logger)
         {
-            
+
         }
 
         public string GetXML(cfdi33.Comprobante comprobante)
@@ -50,17 +52,21 @@ namespace TRSF.Invoicing.CFDI
 
         public string Timbrar(TRSF.Invoicing.BindingModels.Comprobante apiComprobante, string xmlComprobanteSellado, long transaccion)
         {
+            Logger.LogInformation("Enviando comprobante a timbrar para RFC {Rfc}, transaccion {Transaccion}", apiComprobante.Emisor.RFC, transaccion);
             var xmlTimbrado = SatProvider.Timbrar(apiComprobante.Emisor.RFC, xmlComprobanteSellado, transaccion);
             var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
             apiComprobante.UUID = Guid.Parse(timbrado.UUID);
             apiComprobante.FechaTimbrado = timbrado.FechaTimbrado;
+            Logger.LogInformation("Comprobante timbrado con UUID {Uuid}", apiComprobante.UUID);
             return xmlTimbrado;
         }
 
         public string Timbrar(string RFCEmisor, string xmlComprobanteSellado, long transaccion)
         {
+            Logger.LogInformation("Enviando comprobante a timbrar para RFC {Rfc}, transaccion {Transaccion}", RFCEmisor, transaccion);
             var xmlTimbrado = SatProvider.Timbrar(RFCEmisor, xmlComprobanteSellado, transaccion);
             var timbrado = UtilTimbrado.ObtenerDatosTimbrado(xmlTimbrado);
+            Logger.LogInformation("Comprobante timbrado con UUID {Uuid}", timbrado.UUID);
 
             return xmlTimbrado;
         }

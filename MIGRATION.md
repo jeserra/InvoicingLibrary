@@ -172,3 +172,28 @@ a `TRSF` umbrella namespace, ahead of the public release:
   `Assert.Equal` calls, a couple of `Assert.Equal(true/false, x)` that should be
   `Assert.True`/`False`, and a helper method on a couple of test classes that's public
   but not itself a test.
+
+## Interlude — pluggable logging
+
+Added `Microsoft.Extensions.Logging.Abstractions` (interfaces only, no concrete
+provider — same pluggable-interface philosophy already used for `ISATProvider`/
+`IQRProvider`/`ICertificatesRepository`) and threaded an optional `ILogger`/`ILogger<T>`
+constructor parameter through `CFDIBase` (and `CFDIv33`, which derives from it),
+`EcodexProvider`, and `EcodexQRProvider`. Defaults to `NullLogger` when not supplied, so
+every existing call site — including every test that constructs these classes with the
+old constructor arity — keeps working unchanged (verified: 47 passed / 3 skipped / 0
+failed, same as before).
+
+Logging was added only where it adds real diagnostic value, not sprinkled everywhere:
+- `CFDIBase`: before throwing on a failed cadena-original XSLT transform, and before
+  throwing on a CSD private-key decryption failure.
+- `CFDIv33.Timbrar`: an info-level line before sending a comprobante to the PAC and
+  after it comes back stamped with a UUID.
+- `EcodexProvider`: an error-level line in each SOAP fault handler (`FallaServicio`/
+  `FallaSesion`/`FallaValidacion`), which previously just re-threw with no logging at all.
+- `EcodexQRProvider`: replaced two raw `Console.WriteLine`/`Console.Write` calls with
+  proper logger calls — a library should never write directly to the console, and this
+  was the only place in the codebase still doing so.
+
+README gained a short "Logging" section showing how to wire NLog (or any other
+`Microsoft.Extensions.Logging`-compatible provider) from the consuming application.
