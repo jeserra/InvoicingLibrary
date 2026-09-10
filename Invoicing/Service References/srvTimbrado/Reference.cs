@@ -916,20 +916,8 @@ namespace Invoicing.srvTimbrado {
         
         public TimbradoClient() {
         }
-        
-        public TimbradoClient(string endpointConfigurationName) : 
-                base(endpointConfigurationName) {
-        }
-        
-        public TimbradoClient(string endpointConfigurationName, string remoteAddress) : 
-                base(endpointConfigurationName, remoteAddress) {
-        }
-        
-        public TimbradoClient(string endpointConfigurationName, System.ServiceModel.EndpointAddress remoteAddress) : 
-                base(endpointConfigurationName, remoteAddress) {
-        }
-        
-        public TimbradoClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) : 
+
+        public TimbradoClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) :
                 base(binding, remoteAddress) {
         }
         

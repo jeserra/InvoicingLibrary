@@ -244,20 +244,8 @@ namespace Invoicing.srvSeguridad {
         
         public SeguridadClient() {
         }
-        
-        public SeguridadClient(string endpointConfigurationName) : 
-                base(endpointConfigurationName) {
-        }
-        
-        public SeguridadClient(string endpointConfigurationName, string remoteAddress) : 
-                base(endpointConfigurationName, remoteAddress) {
-        }
-        
-        public SeguridadClient(string endpointConfigurationName, System.ServiceModel.EndpointAddress remoteAddress) : 
-                base(endpointConfigurationName, remoteAddress) {
-        }
-        
-        public SeguridadClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) : 
+
+        public SeguridadClient(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress) :
                 base(binding, remoteAddress) {
         }
         

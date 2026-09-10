@@ -1,37 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
 using Invoicing.srvSeguridad;
 using Invoicing.srvTimbrado;
-using Invoicing.srvClientes;
 using ProcessCFDI.Utils;
 using System.ServiceModel;
 using Invoicing.Interfaces;
-using System.Configuration;
 
 namespace Invoicing.CFDIProviders
 {
-    public class EcodexProvider:ISATProvider
+    public class EcodexProvider : ISATProvider
     {
+        private readonly string integratorId;
+        private readonly Uri timbradoEndpoint;
+        private readonly Uri seguridadEndpoint;
 
-        public string INTEGRATOR_ID
+        public EcodexProvider(string integratorId, Uri timbradoEndpoint, Uri seguridadEndpoint)
         {
-            get
-            {
-                return  ConfigurationManager.AppSettings["INTEGRATOR_ID"].ToString();
-            }
+            this.integratorId = integratorId;
+            this.timbradoEndpoint = timbradoEndpoint;
+            this.seguridadEndpoint = seguridadEndpoint;
         }
-      //  private const String INTEGRATOR_ID = "2b3a8764-d586-4543-9b7e-82834443f219";
+
+        public string INTEGRATOR_ID => integratorId;
+
+        private static BasicHttpBinding CreateSecureBinding() =>
+            new BasicHttpBinding(BasicHttpSecurityMode.Transport);
+
+        private TimbradoClient CreateTimbradoClient() =>
+            new TimbradoClient(CreateSecureBinding(), new EndpointAddress(timbradoEndpoint));
+
+        private SeguridadClient CreateSeguridadClient() =>
+            new SeguridadClient(CreateSecureBinding(), new EndpointAddress(seguridadEndpoint));
 
         public byte[] ObtenerQR(string RFC, String UUID, long transactionId)
         {
             try
             {
-                TimbradoClient client = new TimbradoClient();
+                TimbradoClient client = CreateTimbradoClient();
 
-                var response =  client.ObtenerQRTimbrado(RFC, ObtenerToken(RFC, transactionId), ref transactionId, UUID);
+                var response = client.ObtenerQRTimbrado(RFC, ObtenerToken(RFC, transactionId), ref transactionId, UUID);
                 return response.Imagen;
             }
             catch (FaultException<srvTimbrado.FallaServicio> serviceFault)
@@ -48,44 +54,40 @@ namespace Invoicing.CFDIProviders
             }
         }
 
-        public String Timbrar (String RFC,  String Comprobante, long transactionId)
+        public String Timbrar(String RFC, String Comprobante, long transactionId)
         {
             try
             {
-                TimbradoClient client = new TimbradoClient();
+                TimbradoClient client = CreateTimbradoClient();
 
                 ComprobanteXML commprobante = new ComprobanteXML();
                 commprobante.DatosXML = Comprobante;
-                var timbrado = client.TimbraXML(ref commprobante, RFC, ObtenerToken(RFC, transactionId) , ref transactionId);
+                var timbrado = client.TimbraXML(ref commprobante, RFC, ObtenerToken(RFC, transactionId), ref transactionId);
                 return commprobante.DatosXML;
             }
-            catch(FaultException<srvTimbrado.FallaServicio> serviceFault)
+            catch (FaultException<srvTimbrado.FallaServicio> serviceFault)
             {
-                throw new Exception(String.Format( "Error al timbrar  {0} {1}", serviceFault.Message, serviceFault.Detail.Numero));
-                
+                throw new Exception(String.Format("Error al timbrar  {0} {1}", serviceFault.Message, serviceFault.Detail.Numero));
             }
             catch (FaultException<srvTimbrado.FallaSesion> serviceSesion)
             {
-                throw new Exception(String.Format( "Error al timbrar {0}", serviceSesion.Message));
+                throw new Exception(String.Format("Error al timbrar {0}", serviceSesion.Message));
             }
             catch (FaultException<srvTimbrado.FallaValidacion> faultvalidation)
             {
-                throw new Exception(String.Format( "Error al timbrar {0}", faultvalidation.Message));
+                throw new Exception(String.Format("Error al timbrar {0}", faultvalidation.Message));
             }
         }
 
-        public string ObtenerToken (string RFC, long transactionID)
+        public string ObtenerToken(string RFC, long transactionID)
         {
-            SeguridadClient srv = new SeguridadClient();
+            SeguridadClient srv = CreateSeguridadClient();
             var serviceToken = srv.ObtenerToken(RFC, ref transactionID);
 
             return ObtenerHash(serviceToken);
-            /*var toHash = String.Format("{0}|{1}", INTEGRATOR_ID, serviceToken);
-            var token = Security.Hash(toHash);            
-            return token;*/
         }
 
-        public string ObtenerHash (string serviceToken)
+        public string ObtenerHash(string serviceToken)
         {
             var toHash = String.Format("{0}|{1}", INTEGRATOR_ID, serviceToken);
             var token = Security.Hash(toHash);

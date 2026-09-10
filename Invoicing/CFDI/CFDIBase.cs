@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.IO;
+using System.Security.Cryptography;
 using Invoicing.Interfaces;
 using System.Xml.Xsl;
 using System.Xml;
@@ -65,14 +66,12 @@ namespace Invoicing.CFDI
 
         public byte[] GetSHA1(string OriginalChain)
         {
-            System.Security.Cryptography.SHA1CryptoServiceProvider cryptoTransformSHA1 = new System.Security.Cryptography.SHA1CryptoServiceProvider();
-            return cryptoTransformSHA1.ComputeHash(Encoding.UTF8.GetBytes(OriginalChain));
+            return SHA1.HashData(Encoding.UTF8.GetBytes(OriginalChain));
         }
 
         public byte[] GetSHA256(string OriginalChain)
         {
-            System.Security.Cryptography.SHA256CryptoServiceProvider cryptoTransformSHA1 = new System.Security.Cryptography.SHA256CryptoServiceProvider();
-            return cryptoTransformSHA1.ComputeHash(Encoding.UTF8.GetBytes(OriginalChain));
+            return SHA256.HashData(Encoding.UTF8.GetBytes(OriginalChain));
         }
         public string SetSeal(cfdi33.Comprobante CFDIComprobante, string TheXML, string noCertificado)
         {
@@ -82,64 +81,34 @@ namespace Invoicing.CFDI
 
             byte[] SHA256hash = GetSHA256(OriginalChain);
 
-            string PassKey = certificate.Pwd;
-            System.Security.SecureString secPassPhrase = new System.Security.SecureString();
-            foreach (char passChar in PassKey.ToCharArray())
-                secPassPhrase.AppendChar(passChar);
+            using RSA privateKey = LoadPrivateKeyFromString(certificate.Pwd, certificate.KeyFile);
 
-            System.Security.Cryptography.RSACryptoServiceProvider privateKey = LoadPrivateKeyFromString( secPassPhrase, certificate.KeyFile);
+            return GetSeal(SHA256hash, privateKey);
+        }
 
-            if (privateKey == null)
+        public string GetSeal(byte[] rgbHash, RSA privateKey)
+        {
+            byte[] signature = privateKey.SignHash(rgbHash, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            return Convert.ToBase64String(signature);
+        }
+
+        public RSA LoadPrivateKeyFromString(string password, string keyFile)
+        {
+            byte[] privateKeyBytes = Convert.FromBase64String(keyFile);
+            RSA rsa = RSA.Create();
+            try
             {
+                rsa.ImportEncryptedPkcs8PrivateKey(password, privateKeyBytes, out _);
+                return rsa;
+            }
+            catch (CryptographicException ex)
+            {
+                rsa.Dispose();
                 throw new InvalidOperationException(
                     "No se pudo descifrar la llave privada del CSD (contrasena incorrecta o " +
-                    "archivo .key corrupto/no valido).");
+                    "archivo .key corrupto/no valido).", ex);
             }
-
-            return   GetSeal(SHA256hash, privateKey);
         }
 
-        public string GetSeal(byte[] rgbHash, System.Security.Cryptography.RSACryptoServiceProvider privateKey)
-        {
-            System.Security.Cryptography.RSAPKCS1SignatureFormatter rsaPKCS1 = new System.Security.Cryptography.RSAPKCS1SignatureFormatter(privateKey);
-            rsaPKCS1.SetHashAlgorithm("SHA256");
-
-            return Convert.ToBase64String(rsaPKCS1.CreateSignature(rgbHash));
-        }
-
-        public System.Security.Cryptography.RSACryptoServiceProvider LoadPrivateKeyFromString( System.Security.SecureString secPassPhrase, string keyFile)
-        { 
-            byte[] privateKey = Convert.FromBase64String(keyFile);
-            return Utils.SSLKey.DecodeEncryptedPrivateKeyInfo(privateKey, secPassPhrase);
-        }
-
-        #region image
-        public byte[] imageToByte(System.Drawing.Bitmap img)
-        {
-            MemoryStream stream = new MemoryStream();
-            img.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-            Byte[] bytes = stream.ToArray();
-
-            return bytes;
-        }
-
-        private byte[] BmpToBytes_MemStream(System.Drawing.Bitmap bmp)
-        {
-            MemoryStream ms = new MemoryStream();
-            // Save to memory using the Jpeg format
-            bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
-
-            // read to end
-            byte[] bmpBytes = ms.GetBuffer();
-            bmp.Dispose();
-            ms.Close();
-
-            return bmpBytes;
-        }
-        #endregion
-
-        
-
-        
     }
 }

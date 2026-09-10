@@ -5,7 +5,6 @@ using Invoicing.CFDI;
 using NSubstitute;
 using Invoicing.Interfaces;
 using Invoicing.Test.Certifcate;
-using Newtonsoft.Json;
 using Invoicing.Helpers;
 using Invoicing.BindingModels;
 using System.Collections.Generic;

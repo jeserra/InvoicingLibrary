@@ -11,18 +11,15 @@ namespace Invoicing.Test.Certifcate
         
         private void Initialize ()
         {
-           var pathCer =   @"..\\..\\Resources\\CSD_Pruebas_CFDI_LAN7008173R5.cer";
-           var pathKey =   @"..\\..\\Resources\\CSD_Pruebas_CFDI_LAN7008173R5.key";
-            X509Certificate x509Certificate = new X509Certificate(pathCer);
-              
+           var pathCer = Path.Combine(AppContext.BaseDirectory, "Resources", "CSD_Pruebas_CFDI_LAN7008173R5.cer");
+           var pathKey = Path.Combine(AppContext.BaseDirectory, "Resources", "CSD_Pruebas_CFDI_LAN7008173R5.key");
+            X509Certificate x509Certificate = X509CertificateLoader.LoadCertificateFromFile(pathCer);
+
             CerFile = Convert.ToBase64String(x509Certificate.GetPublicKey());
             byte[] serialNumber = x509Certificate.GetSerialNumber();
             Array.Reverse(serialNumber);
             NoCertificate = Encoding.UTF8.GetString(serialNumber);
-            //_controllerComprobante.CFDIComprobante.certificado = x509Certificate.GetPublicKeyString();
             Pwd = "12345678a";
-            //noCertificado = "20001000000200000258";
-            var bytesFile = File.ReadAllBytes(pathKey);
             KeyFile = Convert.ToBase64String( File.ReadAllBytes(pathKey));
         }
      

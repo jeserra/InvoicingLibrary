@@ -16,11 +16,8 @@ namespace ProcessCFDI.Utils
             enc.GetBytes(ToHash.ToCharArray(), 0, ToHash.Length, data, 0, true);
 
             // Implementation the SHA1 compute
-            using (SHA1 sha1 = new SHA1CryptoServiceProvider())
-            {
-                byte[] result = sha1.ComputeHash(data);
-                return BitConverter.ToString(result).Replace("-", "").ToLower();
-            }
+            byte[] result = SHA1.HashData(data);
+            return BitConverter.ToString(result).Replace("-", "").ToLower();
         }
     }
 }

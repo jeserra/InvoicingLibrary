@@ -4,11 +4,8 @@ using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Properties;
 using iText.Layout.Element;
- 
-using System.Xml.Xsl;
-using System.Xml;
 using System.IO;
- 
+
 using iText.Layout.Borders;
 using Invoicing.Translates;
 using iText.IO.Image;
@@ -63,21 +60,18 @@ namespace Invoicing.Print
             PdfDocument pdfDoc = new PdfDocument(writer);
             Document doc = new Document(pdfDoc);
 
-            Table tableDocto = new Table(new float[] { 4 }).SetWidthPercent(100);  
-        
+            Table tableDocto = new Table(new float[] { 4 }).UseAllAvailableWidth();
+
             Table tableImage = new Table(new float[] { 4, 4 } );
             Table tableEmisorReceptor = new Table(new float[] { 4,6 })
-               // .SetBackgroundColor(Color.PINK)
-                .SetBorder(Border.NO_BORDER); 
+                .SetBorder(Border.NO_BORDER);
             Table tableDatosReceptor = new Table(new float[] { 4, 6 })
-                .SetWidthPercent(100);
+                .UseAllAvailableWidth();
             Table tableEmisor = new Table(new float[] { 4 , 2   })
-              //  .SetBackgroundColor(Color.YELLOW)
                 .SetBorder(Border.NO_BORDER); ;
 
 
-          //  tableImage.AddCell(createImageCell(ImageLogo) );
-            tableImage.SetWidthPercent(50);
+            tableImage.SetWidth(UnitValue.CreatePercentValue(50));
             tableImage.SetTextAlignment(TextAlignment.RIGHT);
 
             tableImage.AddCell(getNormalCell("Factura", 24).SetTextAlignment(TextAlignment.CENTER));
@@ -337,7 +331,7 @@ namespace Invoicing.Print
                 return new Cell(rowSpan, colSpan);
             }
 
-            PdfFont f = PdfFontFactory.CreateFont(FontConstants.HELVETICA);
+            PdfFont f = PdfFontFactory.CreateFont(iText.IO.Font.Constants.StandardFonts.HELVETICA);
 
             Cell cell = new Cell(rowSpan, colSpan).Add(new Paragraph(input).SetFont(f));
             cell.SetHorizontalAlignment(HorizontalAlignment.LEFT);
@@ -345,7 +339,7 @@ namespace Invoicing.Print
             {
                 //size = -size;
                 cell.SetFontSize(size);
-                cell.SetFontColor(Color.BLACK);
+                cell.SetFontColor(ColorConstants.BLACK);
             }
            // cell.SetNextRenderer(new RoundedCornersCellRenderer(cell));
             cell.SetBorder(Border.NO_BORDER);
@@ -359,7 +353,7 @@ namespace Invoicing.Print
                 return new Cell(rowSpan, colSpan);
             }
 
-            PdfFont f = PdfFontFactory.CreateFont(FontConstants.HELVETICA);
+            PdfFont f = PdfFontFactory.CreateFont(iText.IO.Font.Constants.StandardFonts.HELVETICA);
 
             Cell cell = new Cell(rowSpan, colSpan).Add(new Paragraph(input).SetFont(f));
             cell.SetHorizontalAlignment(HorizontalAlignment.LEFT);
@@ -367,12 +361,12 @@ namespace Invoicing.Print
             {
                 //size = -size;
                 cell.SetFontSize(size);
-                cell.SetFontColor(Color.WHITE);
+                cell.SetFontColor(ColorConstants.WHITE);
                 cell.SetBold();
             }
             // cell.SetNextRenderer(new RoundedCornersCellRenderer(cell));
             cell.SetBorder(Border.NO_BORDER);
-            cell.SetBackgroundColor(Color.BLACK);
+            cell.SetBackgroundColor(ColorConstants.BLACK);
             return cell;
         }
 
@@ -383,7 +377,7 @@ namespace Invoicing.Print
                 return new Cell(rowSpan, colSpan);
             }
 
-            PdfFont f = PdfFontFactory.CreateFont(FontConstants.HELVETICA);
+            PdfFont f = PdfFontFactory.CreateFont(iText.IO.Font.Constants.StandardFonts.HELVETICA);
 
             Cell cell = new Cell(rowSpan, colSpan).Add(new Paragraph(input).SetFont(f));
             cell.SetHorizontalAlignment(HorizontalAlignment.LEFT);
@@ -391,7 +385,7 @@ namespace Invoicing.Print
             {
                 //size = -size;
                 cell.SetFontSize(size);
-                cell.SetFontColor(Color.BLACK);
+                cell.SetFontColor(ColorConstants.BLACK);
             }
             // cell.SetNextRenderer(new RoundedCornersCellRenderer(cell));
             cell.SetNextRenderer(new RoundedCornersCellRenderer(cell));
@@ -408,7 +402,7 @@ namespace Invoicing.Print
                 return new Cell();
             }
 
-            PdfFont f = PdfFontFactory.CreateFont(FontConstants.HELVETICA);
+            PdfFont f = PdfFontFactory.CreateFont(iText.IO.Font.Constants.StandardFonts.HELVETICA);
 
             Cell cell = new Cell().Add(new Paragraph(input).SetFont(f));
             cell.SetHorizontalAlignment(HorizontalAlignment.LEFT);
@@ -416,11 +410,11 @@ namespace Invoicing.Print
             {
                 //size = -size;
                 cell.SetFontSize(size);
-                cell.SetFontColor(Color.BLACK);
+                cell.SetFontColor(ColorConstants.BLACK);
             }
             //cell.SetBorder(Border.NO_BORDER);
-            cell.SetBorderLeft(new SolidBorder(Color.BLACK, 1));
-            cell.SetBorderRight(new SolidBorder(Color.BLACK, 1));
+            cell.SetBorderLeft(new SolidBorder(ColorConstants.BLACK, 1));
+            cell.SetBorderRight(new SolidBorder(ColorConstants.BLACK, 1));
             cell.SetPaddingTop(8).SetPaddingBottom(8);
            
             return cell;
@@ -456,66 +450,5 @@ namespace Invoicing.Print
         }
     }
 
-    public static void PrintCFDI( )
-        {
-            var dest = "..\\..\\Resources\\output.pdf";
-            PdfDocument pdfDoc = new PdfDocument(new PdfWriter(dest));
-            Document doc = new Document(pdfDoc);
-
-            String[,] DATA = new String[3, 2] {
-            {"John Edward Jr.", "AAA"},
-            {"Pascal Einstein W. Alfi", "BBB"},
-            {"St. John", "CCC"}
-    };
-
-            Table table = new Table(new float[] { 5, 1 });
-            table.SetWidthPercent(50);
-            table.SetTextAlignment(TextAlignment.LEFT);
-            table.AddCell(new Cell().Add("Name: " + DATA[0, 0]).SetBorder(Border.NO_BORDER));
-            table.AddCell(new Cell().Add(DATA[0, 1]).SetBorder(Border.NO_BORDER));
-            table.AddCell(new Cell().Add("Surname: " + DATA[1, 0]).SetBorder(Border.NO_BORDER));
-            table.AddCell(new Cell().Add(DATA[1, 1]).SetBorder(Border.NO_BORDER));
-            table.AddCell(new Cell().Add("School: " + DATA[2, 0]).SetBorder(Border.NO_BORDER));
-            table.AddCell(new Cell().Add(DATA[1, 1]).SetBorder(Border.NO_BORDER));
-            doc.Add(table);
-            doc.Add(table);
-
-            doc.Close();
-        }
-
-        public static string Print(string xmlDoc)
-        {
-            return null;
-        }
-     
-        public static string ConvertXMLtoHTML (string xmlComprobante)
-        {
-            XslCompiledTransform xslt = new XslCompiledTransform();
-             
-            xslt.Load("..\\..\\Resources\\output.xsl");
-            XmlTextReader reader = new XmlTextReader(new System.IO.StringReader(xmlComprobante));
-            reader.Read();
-
-            XsltArgumentList xslArg = new XsltArgumentList();
-
-            // Create a parameter which represents the current date and time.
-            DateTime d = DateTime.Now;
-            xslArg.AddParam("date", "", d.ToString());
-
-            StringBuilder sb = new StringBuilder();
-            // Transform the file.
-            XmlWriterSettings settings = new XmlWriterSettings()
-            {
-                 ConformanceLevel = ConformanceLevel.Auto
-            };
-            using (XmlWriter w = XmlWriter.Create(sb, settings))
-            {
-                 
-                xslt.Transform(reader, xslArg, w);
-            }
-            return sb.ToString();
-        }
-
-       
-    }   
+    }
 }

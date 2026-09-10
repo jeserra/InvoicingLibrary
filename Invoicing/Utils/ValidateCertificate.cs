@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.Security.Cryptography;
 
 namespace Invoicing.Utils
 {
@@ -10,25 +7,21 @@ namespace Invoicing.Utils
     {
         public static bool Validate(string PassKey, string KeyFile)
         {
-
             try
-
             {
-                System.Security.SecureString secPassPhrase = new System.Security.SecureString();
-                foreach (char passChar in PassKey.ToCharArray())
-                    secPassPhrase.AppendChar(passChar);
-
                 byte[] privateKey = Convert.FromBase64String(KeyFile);
-                var rsaCertificate = Utils.SSLKey.DecodeEncryptedPrivateKeyInfo(privateKey, secPassPhrase);
-                if (rsaCertificate == null)
-                    return false;
+                using RSA rsa = RSA.Create();
+                rsa.ImportEncryptedPkcs8PrivateKey(PassKey, privateKey, out _);
+                return true;
             }
-            catch (Exception ex)
+            catch (CryptographicException)
             {
                 return false;
             }
-            return true;
-
+            catch (FormatException)
+            {
+                return false;
+            }
         }
     }
 }
