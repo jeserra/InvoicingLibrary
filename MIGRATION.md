@@ -422,3 +422,49 @@ untouched except for the `Timbrado: false` seal-ordering fix described above.
 **Still open before Phase B is complete**: CFDI 3.2 (`Schemas32`/`CFDIv32`) and the
 duplicated `Comprobante.UsoCFDI` are still present — both stay until the 4.0 path has
 seen real-world exercise, per the plan's explicit sequencing decision.
+
+## Interlude — curated/segmented `ICatalogValidator`
+
+Requested feature: most real deployments only ever need a slice of the full national
+catalog (161,511 rows) — a single business sells a handful of product categories and
+operates in a few postal codes. Rather than shipping/validating against the entire
+catalog, added `tools/GenerateCuratedCatalogDb`, a build-time tool that derives a small
+curated `.sqlite` from the master one, driven by a declarative JSON manifest.
+
+Two decisions made explicit before building this (see the plan's "Curated/segmented
+`ICatalogValidator`" section):
+- **Geographic grouping (state → municipio → colonia → codigo postal) is deferred.** The
+  vendored `catCFDI.xsd` has zero hierarchy for these three catalogs — flat code lists,
+  no state/municipio relationship, no documentation (same limitation already noted in
+  `Schemas40/xsd/README.md`). Real state-based grouping would need a second, richer
+  geographic dataset (SAT or INEGI) vendored separately — out of scope here. Curation for
+  `CodigoPostal`/`Colonia`/`Municipio` is therefore **explicit-code-list only**.
+- **`ClaveProdServ` needs no new data source for "business category" grouping.** SAT's
+  catalog is UNSPSC-based: the 8-digit code is itself hierarchical, with digits 1-2
+  identifying the segment (business category). Verified directly against the real
+  `catalogs.sqlite` before relying on this: all 52,747 codes are exactly 8 digits, with
+  58 distinct 2-digit segment prefixes (segment `50`, food & beverage, dominates with
+  17,974 codes — consistent with SAT's known catalog composition). So curation here is
+  just a prefix match on data already present, no vendoring needed.
+
+**No new runtime class.** The curated `.sqlite` the tool produces has the exact same
+schema as the master one (`Codigo TEXT PRIMARY KEY, Descripcion TEXT` per table), so the
+existing `SqliteCatalogValidator` works against it completely unchanged — construct it
+with the curated file's path instead of the master's. The deliverable is one new tool
+plus a manifest format, not a new package.
+
+The manifest is one optional JSON section per `CatalogoGrande` member; omitting a
+catalog's section copies that catalog through unfiltered (curation is opt-in per
+catalog). `segmentos` (prefix match, `ClaveProdServ` only) and `codigos`/
+`codigosAdicionales` (exact allowlist, every catalog) can combine within one section.
+Full format and rationale in `tools/GenerateCuratedCatalogDb/README.md`.
+
+Verified: a new `CuratedCatalogGeneratorTest` (3 tests, against a small synthetic fixture
+master db, not the real 5MB one — kept fast and self-contained) confirms segment-prefix
+matching, explicit-code-list matching, and pass-through of catalogs omitted from the
+manifest, going through the real `SqliteCatalogValidator` end to end rather than
+asserting against the generator's internal state. Also manually run once against the
+real `catalogs.sqlite` with a sample manifest (segments `50`+`72`, two explicit postal
+codes) and cross-checked real codes both inside and outside the curated subset resolve
+correctly. 67 total / 64 passed / 3 skipped / 0 failed (up from 64/3) — purely additive,
+no changes to `TRSF.Invoicing` core or the shipped `Catalogs.Sqlite` runtime code.
