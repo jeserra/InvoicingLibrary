@@ -1,0 +1,14 @@
+{
+  "_industria": "Restaurante (operando solo en la zona de Guadalajara, Jalisco)",
+  "_notas": "codigoPostal es una lista explicita de codigos reales con prefijo 44xxx (Guadalajara) - el catalogo no tiene un campo de estado, asi que esta lista se escribe a mano por el negocio, no se filtra por 'Jalisco'. Ver samples/segmentos-claveprodserv.md para el significado de cada segmento.",
+  "claveProdServ": {
+    "segmentos": ["50", "90"],
+    "codigosAdicionales": ["78111808"]
+  },
+  "claveUnidad": {
+    "codigos": ["H87", "E48", "KGM"]
+  },
+  "codigoPostal": {
+    "codigos": ["44100", "44190", "44600", "44630"]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "_industria": "Transporte de carga / logistica",
+  "_notas": "78 = servicios de transporte, almacenamiento y correo (el servicio que se factura); 25 = vehiculos y sus componentes, por si el negocio tambien factura refacciones/mantenimiento de su propia flota.",
+  "claveProdServ": {
+    "segmentos": ["25", "78"]
+  },
+  "claveUnidad": {
+    "codigos": ["E48", "KGM", "H87"]
+  }
+}

@@ -48,6 +48,35 @@ unchanged** — curation is opt-in per catalog, not all-or-nothing:
   vendoring a second, richer geographic dataset (from SAT or INEGI) — deliberately out of scope
   here; a business curates these by listing the exact codes it operates in.
 
+## Sample manifests
+
+`samples/` has ready-to-run manifests for a few common industries — copy one as a starting
+point instead of writing a manifest from scratch:
+
+| File | Industry |
+|---|---|
+| `restaurante-jalisco.json` | Restaurant, single metro area (segments `50` food, `90` food services) |
+| `comercio-abarrotes.json` | Grocery / food retailer (segments `10`, `50`) |
+| `construccion-ferreteria.json` | Hardware store / small construction business (segments `27`, `30`, `31`, `72`) |
+| `servicios-profesionales.json` | Consulting / professional services, no geography curated (segments `80`, `81`) |
+| `salud-consultorio.json` | Doctor's office / small clinic (segments `42`, `51`, `85`) |
+| `tecnologia-ti.json` | Software / IT services, no geography curated (segments `43`, `81`) |
+| `transporte-logistica.json` | Freight / logistics (segments `25`, `78`) |
+
+Each file has a `_industria`/`_notas` field explaining the choice (ignored by the parser —
+System.Text.Json skips unmapped members by default). Try one directly:
+
+```
+dotnet run --project tools/GenerateCuratedCatalogDb -- \
+  TRSF.Invoicing.Catalogs.Sqlite/Data/catalogs.sqlite \
+  tools/GenerateCuratedCatalogDb/samples/restaurante-jalisco.json \
+  /tmp/curated.sqlite
+```
+
+`samples/segmentos-claveprodserv.md` lists every one of the 58 `ClaveProdServ` segments that
+actually exist in the vendored catalog, with a name and how many codes fall under it — use it
+to pick which `segmentos` belong in a manifest for an industry not covered above.
+
 ## Regenerating
 
 Re-run whenever the master `catalogs.sqlite` is regenerated (see

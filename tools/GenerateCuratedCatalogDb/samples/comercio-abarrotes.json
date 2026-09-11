@@ -1,0 +1,13 @@
+{
+  "_industria": "Tienda de abarrotes / distribuidor de alimentos (zona Ciudad de Mexico)",
+  "_notas": "segmento 10 cubre materia prima agropecuaria (fruta, verdura, granos sin procesar); segmento 50 cubre alimentos, bebidas y tabaco ya procesados/empacados - la mayoria de una tienda de abarrotes cae en 50.",
+  "claveProdServ": {
+    "segmentos": ["10", "50"]
+  },
+  "claveUnidad": {
+    "codigos": ["H87", "KGM", "LTR"]
+  },
+  "codigoPostal": {
+    "codigos": ["06000", "06001", "06002", "06003", "06004"]
+  }
+}

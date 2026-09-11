@@ -1,0 +1,13 @@
+{
+  "_industria": "Ferreteria / constructora pequena (materiales, herramientas y servicio de construccion)",
+  "_notas": "27 = herramientas, 30/31 = materiales y componentes de construccion/manufactura, 72 = servicios de construccion y mantenimiento - cubre tanto la venta de material como la mano de obra que suele facturar el mismo negocio.",
+  "claveProdServ": {
+    "segmentos": ["27", "30", "31", "72"]
+  },
+  "claveUnidad": {
+    "codigos": ["H87", "MTR", "MTK", "KGM"]
+  },
+  "codigoPostal": {
+    "codigos": ["44100", "44190", "44600"]
+  }
+}

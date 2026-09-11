@@ -1,0 +1,10 @@
+{
+  "_industria": "Desarrollo de software / servicios de TI",
+  "_notas": "43 = tecnologias de informacion, radiodifusion y telecomunicaciones (licencias, equipo, servicios de TI); 81 para el trabajo de ingenieria/desarrollo cuando se factura como servicio de ingenieria en vez de TI puro. Sin geografia curada: un negocio de software normalmente factura clientes en cualquier parte.",
+  "claveProdServ": {
+    "segmentos": ["43", "81"]
+  },
+  "claveUnidad": {
+    "codigos": ["E48", "HUR", "H87"]
+  }
+}

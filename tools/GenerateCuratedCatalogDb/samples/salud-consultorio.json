@@ -1,0 +1,13 @@
+{
+  "_industria": "Consultorio medico / clinica pequena",
+  "_notas": "85 = servicios de salud (consultas, procedimientos), 42 = equipo medico y sus suministros (si el consultorio tambien factura material/insumos), 51 = medicamentos si dispensa directamente.",
+  "claveProdServ": {
+    "segmentos": ["42", "51", "85"]
+  },
+  "claveUnidad": {
+    "codigos": ["E48", "H87"]
+  },
+  "codigoPostal": {
+    "codigos": ["06000", "06001", "06002"]
+  }
+}

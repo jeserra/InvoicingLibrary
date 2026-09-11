@@ -1,0 +1,10 @@
+{
+  "_industria": "Consultoria / servicios profesionales (despacho de negocios, sin inventario fisico)",
+  "_notas": "80 = servicios de gestion empresarial y administrativos (el segmento donde cae la mayoria de facturas de consultoria segun SAT), 81 = servicios de ingenieria/investigacion/tecnologia para el lado mas tecnico. codigoPostal se omite a proposito: un despacho de consultoria tipicamente factura remoto/en varias ciudades, asi que no tiene sentido curar geografia aqui.",
+  "claveProdServ": {
+    "segmentos": ["80", "81"]
+  },
+  "claveUnidad": {
+    "codigos": ["E48", "HUR", "ACT"]
+  }
+}

@@ -468,3 +468,24 @@ real `catalogs.sqlite` with a sample manifest (segments `50`+`72`, two explicit 
 codes) and cross-checked real codes both inside and outside the curated subset resolve
 correctly. 67 total / 64 passed / 3 skipped / 0 failed (up from 64/3) — purely additive,
 no changes to `TRSF.Invoicing` core or the shipped `Catalogs.Sqlite` runtime code.
+
+**Follow-up**: pre-documented the segment-picking side of this. Queried the real
+`catalogs.sqlite` for the complete list of `ClaveProdServ` segment prefixes actually
+present (58, matching the earlier count) and cross-referenced against the public UNSPSC
+standard SAT's catalog is based on (plus two point-checks against SAT's own catalog data
+via a third-party mirror, not the empty `catCFDI.xsd`: segment `01` is exactly the
+generic placeholder code `01010101` = "No existe en el catálogo", segment `95` is
+land/buildings/structures) to write `samples/segmentos-claveprodserv.md` — every segment
+present in the vendored data, named, with its code count, explicit about which names are
+externally-sourced rather than from SAT's own (undocumented) XSD, and honest about the
+one segment (`64`, a single code) no source could identify.
+
+Added seven ready-to-run sample manifests under `samples/` (restaurant, grocery,
+hardware/construction, professional services, medical office, software/IT, freight —
+each with a `_notas` field explaining the segment choice), covering both curated-
+geography examples (restaurant, grocery, medical, hardware — explicit postal code lists)
+and deliberately-uncurated-geography ones (consulting, software, freight — a business
+that bills nationally has no reason to restrict `CodigoPostal`). Every code in every
+sample (segments, `ClaveUnidad` codes, postal codes) was checked against the real
+`catalogs.sqlite` before being written down, then all seven manifests were actually run
+through the generator against the real catalog as a final check, not just eyeballed.
