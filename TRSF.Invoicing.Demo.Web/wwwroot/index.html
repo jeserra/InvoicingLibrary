@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TRSF.Invoicing - demo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>TRSF.Invoicing - demo de facturacion CFDI 4.0</h1>
+    <p class="subtitle">Genera catalogo, define emisor, crea una factura desde una Constancia de Situacion Fiscal y sellala.</p>
+
+    <div class="banner">
+      <strong>Solo para pruebas.</strong> No suba certificados (CSD) reales - use la opcion
+      "CSD de pruebas del SAT" a menos que sepa lo que hace. Nada aqui se timbra ante el SAT
+      (se genera un XML <em>sellado</em>, no timbrado). Nada se guarda en disco entre sesiones.
+    </div>
+
+    <div class="steps">
+      <span class="step-pill" data-step="1">1. Catalogo</span>
+      <span class="step-pill" data-step="2">2. Emisor</span>
+      <span class="step-pill" data-step="3">3. Factura</span>
+      <span class="step-pill" data-step="4">4. Sellar</span>
+    </div>
+
+    <!-- Paso 1 -->
+    <div class="panel" id="panel-1">
+      <h2>Paso 1 - Generar catalogo curado</h2>
+      <p class="hint">Corre tools/GenerateCuratedCatalogDb contra el catalogo maestro real, usando uno de los manifiestos de ejemplo por industria.</p>
+      <label for="industria">Industria</label>
+      <select id="industria">
+        <option value="restaurante-jalisco">Restaurante (Jalisco)</option>
+        <option value="comercio-abarrotes">Comercio / abarrotes</option>
+        <option value="construccion-ferreteria">Ferreteria / construccion</option>
+        <option value="servicios-profesionales">Servicios profesionales</option>
+        <option value="salud-consultorio">Consultorio medico</option>
+        <option value="tecnologia-ti">Tecnologia / TI</option>
+        <option value="transporte-logistica">Transporte / logistica</option>
+        <option value="completo">Catalogo completo (sin curar)</option>
+      </select>
+      <button id="btn-generate">Generar catalogo</button>
+      <div class="msg" id="msg-1"></div>
+      <table id="table-resumen" hidden>
+        <thead><tr><th>Catalogo</th><th>Conservadas</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Paso 2 -->
+    <div class="panel" id="panel-2" hidden>
+      <h2>Paso 2 - Datos del emisor y certificado</h2>
+      <div class="row">
+        <div>
+          <label for="emisor-rfc">RFC</label>
+          <input type="text" id="emisor-rfc" value="LAN7008173R5" />
+        </div>
+        <div>
+          <label for="emisor-nombre">Nombre / razon social</label>
+          <input type="text" id="emisor-nombre" value="Mi Empresa Demo SA de CV" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="emisor-regimen">Regimen fiscal</label>
+          <select id="emisor-regimen">
+            <option value="601">601 - General de Ley Personas Morales</option>
+            <option value="612">612 - Personas Fisicas con Actividades Empresariales y Profesionales</option>
+            <option value="621">621 - Incorporacion Fiscal</option>
+            <option value="626" selected>626 - Regimen Simplificado de Confianza</option>
+            <option value="603">603 - Personas Morales con Fines no Lucrativos</option>
+          </select>
+        </div>
+        <div>
+          <label for="emisor-lugar">Lugar de expedicion (C.P.)</label>
+          <input type="text" id="emisor-lugar" value="44100" />
+        </div>
+      </div>
+
+      <label><input type="checkbox" id="use-test-csd" checked /> Usar CSD de pruebas del SAT (recomendado)</label>
+      <div id="csd-upload" hidden>
+        <div class="row">
+          <div>
+            <label for="cer-file">Archivo .cer</label>
+            <input type="file" id="cer-file" accept=".cer" />
+          </div>
+          <div>
+            <label for="key-file">Archivo .key</label>
+            <input type="file" id="key-file" accept=".key" />
+          </div>
+        </div>
+        <label for="csd-pwd">Contrasena de la llave privada</label>
+        <input type="password" id="csd-pwd" />
+      </div>
+
+      <button id="btn-emisor">Guardar emisor y certificado</button>
+      <div class="msg" id="msg-2"></div>
+    </div>
+
+    <!-- Paso 3 -->
+    <div class="panel" id="panel-3" hidden>
+      <h2>Paso 3 - Nueva factura</h2>
+
+      <h3>Receptor (desde Constancia de Situacion Fiscal)</h3>
+      <div class="row">
+        <div>
+          <label for="csf-pdf">PDF de la Constancia de Situacion Fiscal</label>
+          <input type="file" id="csf-pdf" accept="application/pdf" />
+        </div>
+        <div>
+          <label for="csf-usocfdi">Uso de CFDI</label>
+          <select id="csf-usocfdi">
+            <option value="G03">G03 - Gastos en general</option>
+            <option value="G01">G01 - Adquisicion de mercancias</option>
+            <option value="S01">S01 - Sin efectos fiscales</option>
+          </select>
+        </div>
+      </div>
+      <button id="btn-csf" class="secondary">Leer constancia</button>
+      <div class="msg" id="msg-csf"></div>
+
+      <div class="row">
+        <div>
+          <label for="rec-rfc">RFC receptor</label>
+          <input type="text" id="rec-rfc" />
+        </div>
+        <div>
+          <label for="rec-nombre">Nombre receptor</label>
+          <input type="text" id="rec-nombre" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="rec-cp">Domicilio fiscal (C.P.)</label>
+          <input type="text" id="rec-cp" />
+        </div>
+        <div>
+          <label for="rec-regimen">Regimen fiscal receptor</label>
+          <input type="text" id="rec-regimen" placeholder="p.ej. 605" />
+        </div>
+      </div>
+
+      <h3>Concepto (linea unica, IVA 16% fijo para esta demo)</h3>
+      <div class="row">
+        <div class="autocomplete">
+          <label for="concepto-claveprodserv">Clave producto/servicio</label>
+          <input type="text" id="concepto-claveprodserv" placeholder="escriba para buscar en el catalogo" autocomplete="off" />
+          <div class="suggestions" id="suggest-prodserv" hidden></div>
+        </div>
+        <div class="autocomplete">
+          <label for="concepto-claveunidad">Clave unidad</label>
+          <input type="text" id="concepto-claveunidad" placeholder="escriba para buscar" autocomplete="off" />
+          <div class="suggestions" id="suggest-unidad" hidden></div>
+        </div>
+      </div>
+      <label for="concepto-descripcion">Descripcion</label>
+      <input type="text" id="concepto-descripcion" value="Servicio de ejemplo" />
+      <div class="row">
+        <div>
+          <label for="concepto-cantidad">Cantidad</label>
+          <input type="number" id="concepto-cantidad" value="1" min="0.01" step="0.01" />
+        </div>
+        <div>
+          <label for="concepto-preciounitario">Valor unitario (MXN)</label>
+          <input type="number" id="concepto-preciounitario" value="100" min="0" step="0.01" />
+        </div>
+        <div>
+          <label>Total estimado (con IVA)</label>
+          <input type="text" id="concepto-total" value="" disabled />
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 4 -->
+    <div class="panel" id="panel-4" hidden>
+      <h2>Paso 4 - Generar factura sellada</h2>
+      <p class="hint">Sella el comprobante (Timbrado: false) - no se contacta ningun PAC, no se timbra ante el SAT.</p>
+      <button id="btn-seal">Sellar factura</button>
+      <div class="msg" id="msg-4"></div>
+      <div id="xml-result" hidden>
+        <p class="msg ok">Comprobante sellado (no timbrado).</p>
+        <button id="btn-download" class="secondary">Descargar XML</button>
+        <pre id="xml-preview"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

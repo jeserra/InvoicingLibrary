@@ -489,3 +489,49 @@ that bills nationally has no reason to restrict `CodigoPostal`). Every code in e
 sample (segments, `ClaveUnidad` codes, postal codes) was checked against the real
 `catalogs.sqlite` before being written down, then all seven manifests were actually run
 through the generator against the real catalog as a final check, not just eyeballed.
+
+## Interlude — small web demo (`TRSF.Invoicing.Demo.Web`)
+
+Requested feature: a runnable, in-browser walkthrough of the real end-user flow, both as
+a "does this actually all work together" check and as a live showcase for the "anyone can
+test this" goal. New project, minimal API + a single static HTML/JS page (no build
+tooling, no framework), four steps mapping directly onto pieces already built and tested
+separately this session: generate a curated catalog (`GenerateCuratedCatalogDb`, run
+live against the real master `catalogs.sqlite`), collect emisor + certificate data,
+parse a Constancia de Situación Fiscal PDF for the receptor and pick a product/service
+from the curated catalog via autocomplete, then seal (not stamp) a real CFDI 4.0 via
+`CFDIv40.CreateCFDI(..., Timbrado: false)`.
+
+State is a single in-process `ConcurrentDictionary` (`DemoSessionStore`) — no database,
+no auth, one session per browser tab. Nothing uploaded (cert, key, CSF PDF) is ever
+written to disk; the per-session curated `.sqlite` is (SQLite needs a file) but gets
+deleted when its session is removed from the store.
+
+**Real correctness bug fixed along the way, not carried over from the test double**: the
+existing `CertificateMoq` test helper sets `CerFile` from
+`X509Certificate.GetPublicKey()` — only the public key, not the full DER certificate
+`cfdi:Comprobante/@Certificado` actually needs. Harmless in the test suite (nothing
+byte-compares `@Certificado` there), but would have produced a CFDI with a garbage
+`@Certificado` attribute here. The demo's own `DemoCertificate.FromBytes` sets `CerFile`
+to the full base64 of the raw `.cer` file bytes instead — confirmed correct by inspecting
+the sealed output end to end (see verification below). `CertificateMoq` itself was left
+untouched; this is a new, separate class.
+
+**A recurring namespace gotcha, in a new place**: unqualified `Comprobante` inside
+`Program.cs` resolved to `cfdi40.Comprobante` instead of `BindingModels.Comprobante`,
+the same failure mode documented earlier for `TranslateModelToCFDI40.cs` — except this
+time in a top-level-statements file with no explicit `namespace` block. `RootNamespace`
+in the `.csproj` (`TRSF.Invoicing.Demo.Web`, nested under the `TRSF.Invoicing.*` tree)
+turned out to still give the compiler an ambient namespace for top-level statements,
+enough to trigger the same enclosing-namespace lookup. Fixed the same way: fully qualify
+`TRSF.Invoicing.BindingModels.Comprobante`/`Receptor`/`Concepto` at the construction site
+rather than relying on the `using`.
+
+Verified by actually running the app (`dotnet run`) and exercising every endpoint via
+curl end to end, not just building it: generated the restaurant catalog (18,067/52,747
+`ClaveProdServ` rows kept), loaded the bundled test CSD, sealed a real single-concepto
+CFDI 4.0 (2 × $150 + 16% IVA = $348.00 `Total`, correct `NoCertificado`, non-empty
+`Sello`, and — the point of the `CerFile` fix above — a full, correct `@Certificado`),
+downloaded it as a file, and confirmed the error paths return clean 400/404s instead of
+crashing: an invalid `ClaveProdServ` against the curated catalog, an unknown session id,
+and a non-PDF upload to the Constancia endpoint ("PDF header not found").

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>TRSF.Invoicing.Demo.Web</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TRSF.Invoicing\TRSF.Invoicing.csproj" />
+    <ProjectReference Include="..\TRSF.Invoicing.Catalogs.Sqlite\TRSF.Invoicing.Catalogs.Sqlite.csproj" />
+    <ProjectReference Include="..\tools\GenerateCuratedCatalogDb\GenerateCuratedCatalogDb.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Manifiestos de industria de ejemplo (ya committeados en tools/), reusados aqui
+         en vez de duplicarlos - ver tools/GenerateCuratedCatalogDb/samples/. -->
+    <Content Include="..\tools\GenerateCuratedCatalogDb\samples\*.json">
+      <Link>Samples\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- CSD de pruebas de SAT ya usado por CFDIv33Test/CFDIv40Test - reusado, no duplicado. -->
+    <Content Include="..\TRSF.Invoicing.Test\Resources\CSD_Pruebas_CFDI_LAN7008173R5.*">
+      <Link>TestCsd\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
