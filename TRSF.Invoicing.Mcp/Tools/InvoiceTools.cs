@@ -21,7 +21,7 @@ public static class InvoiceTools
     private static readonly string CatalogDbPath = Path.Combine(AppContext.BaseDirectory, "Data", "catalogs.sqlite");
 
     [McpServerTool(Name = "read_constancia_fiscal")]
-    [Description("Lee una Constancia de Situacion Fiscal (CSF) del SAT en PDF y arma los datos de Receptor (RFC, nombre, domicilio fiscal, regimen fiscal) para usarlos en create_invoice.")]
+    [Description("Lee una Constancia de Situacion Fiscal (CSF) del SAT en PDF y guarda los datos de Receptor (RFC, nombre, domicilio fiscal, regimen fiscal) para usarlos en create_invoice via 'receptorToken', sin exponerlos en la conversacion.")]
     public static object ReadConstanciaFiscal(
         [Description("Ruta local al PDF de la Constancia de Situacion Fiscal.")] string pdfPath,
         [Description("Codigo de uso del CFDI a asignar (catalogo c_UsoCFDI), p.ej. 'G03'.")] string usoCFDI,
@@ -44,13 +44,18 @@ public static class InvoiceTools
             ? constancia.ToReceptor(usoCFDI)
             : constancia.ToReceptor(usoCFDI, regimenFiscalCodigo);
 
-        return new
+        var receptorToken = ReceptorTokenStore.Save(new ReceptorInput
         {
             rfc = receptor.RFC,
             nombre = receptor.Nombre,
             domicilioFiscalReceptor = receptor.DomicilioFiscalReceptor,
             regimenFiscalReceptor = receptor.RegimenFiscalReceptor,
             usoCFDI = receptor.UsoCFDI,
+        });
+
+        return new
+        {
+            receptorToken,
             regimenesEncontrados = constancia.Regimenes.Select(r => new { r.Descripcion, r.Codigo, r.Vigente }),
             advertencia = receptor.RegimenFiscalReceptor is null
                 ? "No se reconocio ningun regimen fiscal en el PDF - revise/complete el campo antes de sellar."
@@ -78,7 +83,7 @@ public static class InvoiceTools
     public static object CreateInvoice(
         [Description("Certificado de Sello Digital del emisor.")] CertificadoInput cer,
         [Description("Datos del emisor.")] EmisorInput emisor,
-        [Description("Datos del receptor. Puede obtenerse con read_constancia_fiscal.")] ReceptorInput receptor,
+        [Description("Datos del receptor. Use receptor.token de read_constancia_fiscal, o los campos individuales.")] ReceptorInput receptor,
         [Description("Conceptos (lineas) de la factura. Al menos uno.")] List<ConceptoInput> conceptos,
         [Description("Codigo postal del domicilio del emisor (lugar de expedicion).")] string lugarExpedicion,
         [Description("Catalogo c_FormaPago. Default '01' (Efectivo).")] string formaPago = "01",
@@ -90,6 +95,7 @@ public static class InvoiceTools
         if (conceptos is null || conceptos.Count == 0)
             throw new McpException("Se requiere al menos un concepto.");
 
+        var receptorResolved = ResolveReceptor(receptor);
         var certificate = ResolveCertificate(cer);
 
         if (!File.Exists(CatalogDbPath))
@@ -143,11 +149,11 @@ public static class InvoiceTools
             Emisor = new Emisor { RFC = emisor.rfc, Nombre = emisor.nombre, RegimenFiscal = emisor.regimenFiscal },
             Receptor = new TRSF.Invoicing.BindingModels.Receptor
             {
-                RFC = receptor.rfc,
-                Nombre = receptor.nombre,
-                DomicilioFiscalReceptor = receptor.domicilioFiscalReceptor,
-                RegimenFiscalReceptor = receptor.regimenFiscalReceptor,
-                UsoCFDI = receptor.usoCFDI,
+                RFC = receptorResolved.rfc,
+                Nombre = receptorResolved.nombre,
+                DomicilioFiscalReceptor = receptorResolved.domicilioFiscalReceptor,
+                RegimenFiscalReceptor = receptorResolved.regimenFiscalReceptor,
+                UsoCFDI = receptorResolved.usoCFDI,
             },
             Conceptos = conceptosModel,
             LugarExpedicion = lugarExpedicion,
@@ -176,7 +182,7 @@ public static class InvoiceTools
         string savedTo;
         try
         {
-            var fileName = $"{comprobante.Fecha:yyyyMMdd-HHmmss}-{receptor.rfc}.xml";
+            var fileName = $"{comprobante.Fecha:yyyyMMdd-HHmmss}-{receptorResolved.rfc}.xml";
             IInvoiceStorageProvider storage = AzureBlobInvoiceStorageProvider.IsConfigured
                 ? new AzureBlobInvoiceStorageProvider()
                 : new LocalFileInvoiceStorageProvider();
@@ -235,6 +241,31 @@ public static class InvoiceTools
         }
 
         return new { rfc, noCertificado = certificate.NoCertificate, validoDesde = certificate.ValidFrom, validoHasta = certificate.ValidUntil };
+    }
+
+    private static ReceptorInput ResolveReceptor(ReceptorInput receptor)
+    {
+        var hasToken = !string.IsNullOrWhiteSpace(receptor.token);
+        var hasFields = !string.IsNullOrWhiteSpace(receptor.rfc)
+            || !string.IsNullOrWhiteSpace(receptor.nombre)
+            || !string.IsNullOrWhiteSpace(receptor.domicilioFiscalReceptor)
+            || !string.IsNullOrWhiteSpace(receptor.regimenFiscalReceptor)
+            || !string.IsNullOrWhiteSpace(receptor.usoCFDI);
+
+        if (hasToken && hasFields)
+            throw new McpException("Proporcione 'receptor.token' o los campos del receptor, no ambos.");
+
+        if (hasToken)
+            return ReceptorTokenStore.Resolve(receptor.token!);
+
+        if (string.IsNullOrWhiteSpace(receptor.rfc)
+            || string.IsNullOrWhiteSpace(receptor.nombre)
+            || string.IsNullOrWhiteSpace(receptor.domicilioFiscalReceptor)
+            || string.IsNullOrWhiteSpace(receptor.regimenFiscalReceptor)
+            || string.IsNullOrWhiteSpace(receptor.usoCFDI))
+            throw new McpException("Proporcione 'receptor.token', o rfc/nombre/domicilioFiscalReceptor/regimenFiscalReceptor/usoCFDI completos.");
+
+        return receptor;
     }
 
     private static FileCertificate ResolveCertificate(CertificadoInput cer)

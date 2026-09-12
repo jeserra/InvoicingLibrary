@@ -34,23 +34,26 @@ public class EmisorInput
     public string regimenFiscal { get; set; } = "";
 }
 
-[Description("Datos del receptor de la factura. Puede obtenerse con read_constancia_fiscal.")]
+[Description("Datos del receptor de la factura. Use 'token' (devuelto por read_constancia_fiscal) para referenciar datos ya leidos sin repetirlos, o los campos individuales. Proporcione exactamente una de las dos formas.")]
 public class ReceptorInput
 {
-    [Description("RFC del receptor.")]
-    public string rfc { get; set; } = "";
+    [Description("Token devuelto por read_constancia_fiscal. Alternativa a rfc/nombre/domicilioFiscalReceptor/regimenFiscalReceptor/usoCFDI.")]
+    public string? token { get; set; }
 
-    [Description("Razon social o nombre del receptor.")]
-    public string nombre { get; set; } = "";
+    [Description("RFC del receptor. Omita si usa 'token'.")]
+    public string? rfc { get; set; }
 
-    [Description("Codigo postal del domicilio fiscal del receptor.")]
-    public string domicilioFiscalReceptor { get; set; } = "";
+    [Description("Razon social o nombre del receptor. Omita si usa 'token'.")]
+    public string? nombre { get; set; }
 
-    [Description("Codigo de regimen fiscal del receptor (catalogo c_RegimenFiscal).")]
-    public string regimenFiscalReceptor { get; set; } = "";
+    [Description("Codigo postal del domicilio fiscal del receptor. Omita si usa 'token'.")]
+    public string? domicilioFiscalReceptor { get; set; }
 
-    [Description("Codigo de uso del CFDI (catalogo c_UsoCFDI), p.ej. 'G03'.")]
-    public string usoCFDI { get; set; } = "";
+    [Description("Codigo de regimen fiscal del receptor (catalogo c_RegimenFiscal). Omita si usa 'token'.")]
+    public string? regimenFiscalReceptor { get; set; }
+
+    [Description("Codigo de uso del CFDI (catalogo c_UsoCFDI), p.ej. 'G03'. Omita si usa 'token'.")]
+    public string? usoCFDI { get; set; }
 }
 
 [Description("Una linea/concepto de la factura. El impuesto se calcula asumiendo IVA 16% trasladado.")]
