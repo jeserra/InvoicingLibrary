@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="itext7" Version="7.2.6" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="System.ServiceModel.Http" Version="10.0.652802" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="10.0.652802" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.12" />
