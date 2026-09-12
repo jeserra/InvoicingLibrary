@@ -332,3 +332,6 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+# Local MCP server config (machine-specific launch args/env)
+.mcp.json
