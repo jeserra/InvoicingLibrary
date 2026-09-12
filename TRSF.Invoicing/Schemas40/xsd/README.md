@@ -43,9 +43,19 @@ only those smaller catalog definitions extracted from the full `catCFDI.xsd`.
 **Note on descriptions**: `catCFDI.xsd` carries no human-readable text at all for any of
 these five catalogs — every entry is a bare `<xs:enumeration value="X"/>` with no
 `<xs:documentation>`. `SqliteCatalogValidator.ObtenerDescripcion` and the `Descripcion`
-column in `catalogs.sqlite` exist for forward compatibility (in case a richer data
-source — e.g. INEGI's postal code dataset — is used to populate them later) but are
-empty today. `Existe`/code validation is unaffected — it doesn't need a description.
+column in `catalogs.sqlite` exist to hold that text when it's available from elsewhere.
+`Existe`/code validation is unaffected — it doesn't need a description.
+
+SAT separately publishes a workbook (`catCFDI_V_4_*.xls`, from the "Formato de Factura
+(Anexo 20)" page, not `catCFDI.xsd`) that does carry descriptions. For `ClaveProdServ` and
+`ClaveUnidad` it's a clean one-to-one Codigo -> Descripcion map, and `tools/ImportCatalogDescriptions`
+merges it into an existing `catalogs.sqlite` (see that tool's README). `CodigoPostal`,
+`Colonia`, and `Municipio` are deliberately **not** covered by that tool: in the same
+workbook their "descriptions" are scoped by a second key (Estado for Municipio,
+CodigoPostal for Colonia; CodigoPostal itself has no description at all), so the same
+Codigo legitimately means different things in different contexts — populating the current
+single-column schema from it would silently pick one arbitrary name per code. Doing that
+correctly would need a composite key, which is out of scope here.
 
 ## Regenerating
 

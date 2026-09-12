@@ -218,4 +218,8 @@ document.getElementById('btn-download').addEventListener('click', () => {
   window.location.href = `/api/invoice/download?sessionId=${sessionId}`;
 });
 
+document.getElementById('btn-download-pdf').addEventListener('click', () => {
+  window.location.href = `/api/invoice/pdf?sessionId=${sessionId}`;
+});
+
 setStepState(1, 'active');

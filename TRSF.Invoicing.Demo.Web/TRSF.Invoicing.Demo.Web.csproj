@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TRSF.Invoicing\TRSF.Invoicing.csproj" />
     <ProjectReference Include="..\TRSF.Invoicing.Catalogs.Sqlite\TRSF.Invoicing.Catalogs.Sqlite.csproj" />
+    <ProjectReference Include="..\TRSF.Invoicing.PDF\TRSF.Invoicing.PDF.csproj" />
     <ProjectReference Include="..\tools\GenerateCuratedCatalogDb\GenerateCuratedCatalogDb.csproj" />
   </ItemGroup>
 

@@ -144,12 +144,12 @@
       <div class="row">
         <div class="autocomplete">
           <label for="concepto-claveprodserv">Clave producto/servicio</label>
-          <input type="text" id="concepto-claveprodserv" placeholder="escriba para buscar en el catalogo" autocomplete="off" />
+          <input type="text" id="concepto-claveprodserv" placeholder="codigo / descripcion" autocomplete="off" />
           <div class="suggestions" id="suggest-prodserv" hidden></div>
         </div>
         <div class="autocomplete">
           <label for="concepto-claveunidad">Clave unidad</label>
-          <input type="text" id="concepto-claveunidad" placeholder="escriba para buscar" autocomplete="off" />
+          <input type="text" id="concepto-claveunidad" placeholder="codigo / descripcion" autocomplete="off" />
           <div class="suggestions" id="suggest-unidad" hidden></div>
         </div>
       </div>
@@ -180,6 +180,7 @@
       <div id="xml-result" hidden>
         <p class="msg ok">Comprobante sellado (no timbrado).</p>
         <button id="btn-download" class="secondary">Descargar XML</button>
+        <button id="btn-download-pdf" class="secondary">Descargar PDF</button>
         <pre id="xml-preview"></pre>
       </div>
     </div>

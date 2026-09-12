@@ -7,6 +7,7 @@ using TRSF.Invoicing.CFDI;
 using TRSF.Invoicing.ConstanciaFiscal;
 using TRSF.Invoicing.Demo.Web;
 using TRSF.Invoicing.Interfaces;
+using TRSF.Invoicing.PDF;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<DemoSessionStore>();
@@ -60,7 +61,7 @@ app.MapGet("/api/catalog/search", (string sessionId, string catalogo, string? pr
     if (!Enum.TryParse<CatalogoGrande>(catalogo, ignoreCase: true, out var catalogoEnum))
         return Results.BadRequest($"Catalogo desconocido: {catalogo}");
 
-    var matches = CatalogBrowser.BuscarPorPrefijo(session.CuratedDbPath, catalogoEnum, prefix ?? "");
+    var matches = CatalogBrowser.Buscar(session.CuratedDbPath, catalogoEnum, prefix ?? "");
     return Results.Ok(matches);
 });
 
@@ -260,6 +261,21 @@ app.MapGet("/api/invoice/download", (string sessionId, DemoSessionStore store) =
 
     var bytes = System.Text.Encoding.UTF8.GetBytes(session.SelloXml);
     return Results.File(bytes, "application/xml", "factura-demo.xml");
+});
+
+app.MapGet("/api/invoice/pdf", (string sessionId, DemoSessionStore store) =>
+{
+    var session = store.Get(sessionId);
+    if (session?.SelloXml is null)
+        return Results.NotFound("No hay una factura sellada para esta sesion todavia.");
+
+    var cfdi = new CFDIv40(session.CertificatesRepository!, DemoSatProvider.Instance);
+    var comprobante = cfdi.DeserializeXML(session.SelloXml);
+
+    using var stream = new MemoryStream();
+    new ItextPDFProvider().EscribirCFDIPDF(comprobante, stream, imageQR: null);
+
+    return Results.File(stream.ToArray(), "application/pdf", "factura-demo.pdf");
 });
 
 app.Run();
