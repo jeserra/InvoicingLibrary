@@ -7,10 +7,10 @@ using iText.Kernel.Pdf.Canvas.Parser.Listener;
 namespace TRSF.Invoicing.ConstanciaFiscal
 {
     /// <summary>
-    /// Lee una Constancia de Situacion Fiscal (CSF) del SAT en PDF. Usa iText7 (ya
-    /// dependencia del proyecto para PrintPDFService) solo para extraer el texto plano;
-    /// todo el parseo real vive en <see cref="ConstanciaFiscalTextParser"/>, que se
-    /// puede probar sin un PDF.
+    /// Lee una Constancia de Situacion Fiscal (CSF) del SAT en PDF. Usa iText7 solo para
+    /// extraer el texto plano; todo el parseo real vive en <see cref="ConstanciaFiscalTextParser"/>,
+    /// que se puede probar sin un PDF. La escritura de PDFs (representacion impresa del CFDI)
+    /// vive por separado en TRSF.Invoicing.PDF via IPDFProvider - este archivo solo lee.
     /// </summary>
     public static class PdfConstanciaFiscalReader
     {
