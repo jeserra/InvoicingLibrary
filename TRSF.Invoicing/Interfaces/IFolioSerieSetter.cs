@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace TRSF.Invoicing.Interfaces
 {
+    // Legado: contrato de asignacion de serie/folio para un backend multi-producto/cliente.
+    // CFDIBase/CFDIv33/CFDIv40 no lo referencian - solo aparece en los mocks de prueba de
+    // TRSF.Invoicing.Test. No es parte del flujo de sellado/timbrado activo.
     public enum EstatusSerieFolio
     {
         disponible = 0,
